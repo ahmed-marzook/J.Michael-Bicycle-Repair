@@ -1,42 +1,304 @@
 ---
 /**
- * index.astro — SCAFFOLD PLACEHOLDER.
+ * / — the home page. Section order and rationale: docs/DESIGN_SYSTEM.md 5.1.
  *
- * Exists only to give the build a route and to prove the data layer, the
- * layout and Tailwind all compile together. No layout work, no styling, no
- * copy decisions: the implementation agent replaces this file entirely with
- * the real home page (hero, trust signals, services, pricing teaser, reviews,
- * location, contact CTA) per docs/PROJECT_BRIEF.md section 5.
+ * Band rhythm: sections 3, 5 and 7 sit on surface-subtle and the rest on
+ * canvas, giving a light / tinted / light / tinted beat. Exactly two dark
+ * surfaces: the final CTA band and the footer.
+ *
+ * The WhatsApp CTA appears in the hero, the final band, the mobile bar and the
+ * desktop header. Four placements, and no more.
+ *
+ * Every fact on this page is read from src/data/business.ts.
  */
 import BaseLayout from '../layouts/BaseLayout.astro';
+import Button from '../components/Button.astro';
+import WhatsAppButton from '../components/WhatsAppButton.astro';
+import RatingPill from '../components/RatingPill.astro';
+import SectionHeading from '../components/SectionHeading.astro';
+import ServiceCard from '../components/ServiceCard.astro';
+import PricingCard from '../components/PricingCard.astro';
+import PartsCaveat from '../components/PartsCaveat.astro';
+import TestimonialCard from '../components/TestimonialCard.astro';
+import AddressBlock from '../components/AddressBlock.astro';
+import HoursBlock from '../components/HoursBlock.astro';
+import CtaBand from '../components/CtaBand.astro';
+import Icon from '../components/Icon.astro';
+
+// TODO(client): replace with a real photograph of Jimmy at the stand working
+// on a bike in the workshop.
+import HeroWorkshop from '../assets/hero-workshop.svg';
+// TODO(client): this one stays an illustration — it must never be made to look
+// like a real street map.
+import LocationCard from '../assets/location-card.svg';
+
 import { business } from '../data/business';
 
-const { identity, contact, address, pricing, reviews } = business;
+const { identity, contact, address, pricing, reviews, servicingPlan, services } =
+  business;
+
+/** Six services for the overview grid; /services/ carries all thirteen. */
+const featuredServices = services.slice(0, 6);
+
+/**
+ * Three highlights lifted verbatim from the 13-point plan: the bearings step,
+ * the brake and gear set-up step, and the test ride. Selected by index so the
+ * wording can never drift from src/data/business.ts.
+ */
+const planHighlights = [
+  { index: 0, icon: 'wheel' as const, label: 'Bearings' },
+  { index: 4, icon: 'disc' as const, label: 'Brakes and gears' },
+  { index: 11, icon: 'bike' as const, label: 'Test ride' },
+]
+  .map((highlight) => ({
+    ...highlight,
+    text: servicingPlan.points[highlight.index],
+  }))
+  .filter((highlight): highlight is typeof highlight & { text: string } =>
+    Boolean(highlight.text),
+  );
+
+const trustItems = [
+  {
+    icon: 'star' as const,
+    text: `${reviews.aggregate.ratingValue.toFixed(1)} from ${reviews.aggregate.reviewCount} ${reviews.aggregate.sourceLabel} reviews`,
+  },
+  {
+    icon: 'mechanic' as const,
+    text: `One qualified mechanic, every bike — ${identity.ownerFirstName} does the work himself`,
+  },
+  {
+    icon: 'pin' as const,
+    text: `${address.street}, ${address.dependentLocality}`,
+  },
+];
+
+const description = `Bicycle repairs and servicing in Bletchley, Milton Keynes. Full 13-point servicing plan from ${pricing.tiers[0]?.displayPrice}. Rated ${reviews.aggregate.ratingValue.toFixed(1)} from ${reviews.aggregate.reviewCount} Google reviews. WhatsApp ${identity.ownerFirstName} anytime.`;
 ---
 
-<BaseLayout title={identity.tradingName}>
-  <main>
-    <h1>{identity.tradingName}</h1>
-    <p>{identity.shortDescription}</p>
+<BaseLayout
+  title={`Bike repair and servicing in Bletchley, Milton Keynes | ${identity.shortName}`}
+  exactTitle
+  description={description}
+>
+  {/* 2. Hero ------------------------------------------------------------ */}
+  <section class="section">
+    <div class="container-page grid items-center gap-10 lg:grid-cols-12 lg:gap-16">
+      <div class="lg:col-span-7">
+        <span class="eyebrow mb-3">
+          {address.dependentLocality} &middot; {address.locality} &middot; {
+            address.outwardCode
+          }
+        </span>
+        <h1 class="text-display">Bike repairs and servicing in Bletchley</h1>
+        <p class="lead mt-4 md:mt-5">
+          A one-man workshop on {address.streetName} in {
+            address.dependentLocality
+          }, {address.outwardCode}, serving riders across {address.region}.
+          Every bike gets the same thorough servicing plan, done by {
+            identity.ownerFirstName
+          } himself.
+        </p>
 
-    <p>
-      <a href={contact.whatsAppHref}>WhatsApp {identity.ownerFirstName}</a>
-      &middot;
-      <a href={contact.telHref}>{contact.phoneDisplay}</a>
-    </p>
+        <div class="mt-8 flex flex-col gap-3 sm:flex-row sm:items-center">
+          <WhatsAppButton block class="sm:w-auto" />
+          <Button
+            href={contact.telHref}
+            variant="secondary"
+            icon="phone"
+            block
+            class="sm:w-auto"
+            aria-label={`Call ${identity.ownerFirstName} on ${contact.phoneDisplay}`}
+          >
+            Call {contact.phoneDisplay}
+          </Button>
+        </div>
 
-    <p>
-      <a href={address.directionsUrl}>{address.formatted}</a>
-    </p>
+        <div class="mt-8">
+          <RatingPill size={24} />
+        </div>
+      </div>
 
-    <p>
-      {reviews.aggregate.ratingValue.toFixed(1)} from{' '}
-      {reviews.aggregate.reviewCount} reviews on{' '}
-      <a href={reviews.aggregate.sourceUrl}>{reviews.aggregate.sourceLabel}</a>
-    </p>
+      <div class="lg:col-span-5">
+        <div class="illustration">
+          <HeroWorkshop
+            role="img"
+            aria-label={`${identity.ownerFirstName} servicing a bicycle at the workbench in the ${address.locality} workshop`}
+          />
+        </div>
+      </div>
+    </div>
+  </section>
 
-    <p>Servicing from {pricing.tiers[0]?.displayPrice}. {pricing.includesNote}</p>
+  {/* 3. Trust strip ----------------------------------------------------- */}
+  <section
+    class="bg-surface-subtle py-8 md:py-10"
+    aria-label={`Why people use ${identity.spokenName}`}
+  >
+    <div class="container-page">
+      <ul class="grid gap-5 md:grid-cols-3 md:gap-8">
+        {
+          trustItems.map((item) => (
+            <li class="flex items-center gap-3">
+              <span
+                class:list={[
+                  'icon-tile',
+                  item.icon === 'star' ? 'stars-on-light' : null,
+                ]}
+                aria-hidden="true"
+              >
+                <Icon name={item.icon} size={24} />
+              </span>
+              <span class="text-sm">{item.text}</span>
+            </li>
+          ))
+        }
+      </ul>
+    </div>
+  </section>
 
-    <p><small>Scaffold placeholder page — replace with the real home page.</small></p>
-  </main>
+  {/* 4. Services overview ------------------------------------------------ */}
+  <section class="section">
+    <div class="container-page">
+      <SectionHeading
+        eyebrow="What Jimmy fixes"
+        heading="Repairs, servicing and custom builds"
+        lead={`From a puncture to a full wheel build, all done in the workshop on ${address.streetName}.`}
+      />
+
+      <ul class="mt-8 grid gap-4 sm:grid-cols-2 md:mt-10 md:grid-cols-3 md:gap-6">
+        {featuredServices.map((service) => <ServiceCard service={service} />)}
+      </ul>
+
+      <p class="mt-8">
+        <a class="link-standalone" href="/services/">
+          See all {services.length} services
+          <Icon name="chevronRight" size={16} />
+        </a>
+      </p>
+    </div>
+  </section>
+
+  {/* 5. Pricing teaser --------------------------------------------------- */}
+  <section class="section bg-surface-subtle">
+    <div class="container-page">
+      <SectionHeading
+        eyebrow="Servicing prices"
+        heading="One plan, three prices"
+        lead={pricing.includesNote}
+      />
+
+      <p class="mt-6 text-lead font-semibold text-heading">
+        {pricing.headlineStatement}
+      </p>
+
+      <ul class="mt-8 grid gap-4 md:grid-cols-3 md:gap-6">
+        {pricing.tiers.map((tier) => <PricingCard tier={tier} />)}
+      </ul>
+
+      <PartsCaveat class="mt-6" />
+
+      <p class="mt-8">
+        <a class="link-standalone" href="/pricing/">
+          See what is included in a service
+          <Icon name="chevronRight" size={16} />
+        </a>
+      </p>
+    </div>
+  </section>
+
+  {/* 6. Inside a service -------------------------------------------------- */}
+  <section class="section">
+    <div class="container-page">
+      <SectionHeading
+        starRule
+        eyebrow="Inside a service"
+        heading={servicingPlan.title}
+        lead="Thirteen points, in the same order, on every bike. Here are three of them, in Jimmy's own words."
+      />
+
+      <ul class="mt-8 grid gap-4 md:mt-10 md:grid-cols-3 md:gap-6">
+        {
+          planHighlights.map((highlight) => (
+            <li class="card flex h-full flex-col">
+              <span class="icon-tile mb-4">
+                <Icon name={highlight.icon} size={24} />
+              </span>
+              <h3 class="text-h4 font-body font-bold">{highlight.label}</h3>
+              <p class="mt-3 text-sm">{highlight.text}</p>
+            </li>
+          ))
+        }
+      </ul>
+
+      <p class="mt-8">
+        <a class="link-standalone" href="/services/#servicing-plan">
+          See all {servicingPlan.points.length} servicing steps
+          <Icon name="chevronRight" size={16} />
+        </a>
+      </p>
+    </div>
+  </section>
+
+  {/* 7. Reviews ----------------------------------------------------------- */}
+  <section class="section bg-surface-subtle">
+    <div class="container-page">
+      <SectionHeading
+        starRule
+        eyebrow="What people say"
+        heading={`Rated ${reviews.aggregate.ratingValue.toFixed(1)} from ${reviews.aggregate.reviewCount} reviews on ${reviews.aggregate.sourceLabel}`}
+        lead={reviews.placeholderDisclaimer}
+      />
+
+      <ul class="mt-8 grid gap-4 md:mt-10 md:grid-cols-3 md:gap-6">
+        {
+          reviews.testimonials.slice(0, 3).map((testimonial, index) => (
+            <li class:list={[index === 2 ? 'hidden md:block' : null]}>
+              <TestimonialCard testimonial={testimonial} />
+            </li>
+          ))
+        }
+      </ul>
+
+      <p class="mt-8">
+        <a
+          class="link-standalone"
+          href={reviews.aggregate.sourceUrl}
+          target="_blank"
+          rel="noopener noreferrer"
+        >
+          Read all {reviews.aggregate.reviewCount} reviews on {
+            reviews.aggregate.sourceLabel
+          }
+          <Icon name="external" size={16} />
+          <span class="sr-only-text">(opens in a new tab)</span>
+        </a>
+      </p>
+    </div>
+  </section>
+
+  {/* 8. Location ----------------------------------------------------------- */}
+  <section class="section">
+    <div class="container-page grid gap-10 lg:grid-cols-2 lg:items-center lg:gap-16">
+      <div>
+        <SectionHeading
+          eyebrow="Find the workshop"
+          heading={`${address.street}, ${address.dependentLocality}`}
+          lead={`Easy to reach from anywhere in ${address.region}, and the bike does not have to be rideable to get here.`}
+        />
+        <AddressBlock class="mt-8" />
+        <HoursBlock class="mt-8" />
+      </div>
+
+      <div class="illustration">
+        <LocationCard
+          role="img"
+          aria-label={`Illustration of a location pin marking the workshop in ${address.dependentLocality}, ${address.locality}`}
+        />
+      </div>
+    </div>
+  </section>
+
+  {/* 9. Final CTA band ------------------------------------------------------ */}
+  <CtaBand />
 </BaseLayout>

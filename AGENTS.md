@@ -9,7 +9,7 @@ The brief owns *what* we are building; this file owns *how* we work.
 ## 1. Project at a glance
 
 A static marketing site for a local bicycle repair shop in Bletchley, Milton
-Keynes. Astro 5 + Tailwind CSS 4, TypeScript strict, static output, deployable to
+Keynes. Astro 7 + Tailwind CSS 4, TypeScript strict, static output, deployable to
 GitHub Pages or Azure Static Web Apps with no server.
 
 The client is a sole trader. **The site's job is to get someone to message Jimmy
@@ -35,7 +35,7 @@ on WhatsApp.** Every design and code decision is judged against that.
    dozen lines of CSS solves. No React/Vue/Svelte — this is a content site.
 6. **Accessibility is not optional.** WCAG 2.2 AA is a build requirement, not a
    nice-to-have. See the brief for the specifics.
-7. **Commit at checkpoints** (see section 9). Never push, never force, never
+7. **Commit at checkpoints** (see section 8). Never push, never force, never
    amend someone else's commit, and never commit a broken build.
 8. **Report honestly.** If a check fails, say so with the output. Never claim a
    Lighthouse score you did not measure. "Not verified" is an acceptable answer;
@@ -192,7 +192,7 @@ uncommitted; never checkpoint a broken tree.
   agent is concurrently writing to.
 - One logical change per commit. Do not bundle a redesign with a bug fix.
 - Subject line: imperative, under 72 chars, prefixed by scope, e.g.
-  `scaffold: add Astro 5 + Tailwind 4 toolchain`, `data: add business.ts`,
+  `scaffold: add Astro 7 + Tailwind 4 toolchain`, `data: add business.ts`,
   `pages: build pricing page`, `fix: correct contrast on the CTA`.
 - Body: what changed and why, plus the verification actually run.
 - Never commit `node_modules/`, `dist/`, `.astro/` or anything secret.

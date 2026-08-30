@@ -1,17 +1,42 @@
 ---
 /**
- * BaseLayout.astro — SCAFFOLD ONLY.
+ * BaseLayout.astro — the real page shell.
  *
- * The minimum HTML shell needed to prove the toolchain builds end to end:
- * document skeleton, charset, viewport, the Tailwind entry point, head tags via
- * astro-seo, the LocalBusiness JSON-LD, and a slot.
+ * Owns: <html lang="en-GB">, per-page SEO head tags, the self-hosted fonts, the
+ * rasterised Open Graph image, the LocalBusiness JSON-LD (once), the skip link,
+ * the sticky header, <main>, the footer and the persistent mobile WhatsApp bar.
  *
- * Deliberately unstyled and unopinionated. The implementation agent replaces
- * this with the real shell (skip link, header, nav, footer, OG image, per-page
- * SEO props) per docs/DESIGN_SYSTEM.md.
+ * Fonts (docs/DESIGN_SYSTEM.md 2.1): Oswald Variable and Source Sans 3
+ * Variable, self-hosted from npm via Fontsource. Imported here and nowhere
+ * else. No @import url(), no fonts.googleapis.com, no build-time network call.
+ *
+ * Open Graph image (6.3): og-default.svg is rasterised to a real 1200x630 PNG
+ * at build time by getImage(), using the sharp that ships with Astro. Facebook
+ * and WhatsApp do not render an SVG og:image, and a link that previews well
+ * when pasted into Facebook or WhatsApp is goal 1 in the brief.
  */
 import { SEO } from 'astro-seo';
+import { getImage } from 'astro:assets';
+
 import '../styles/global.css';
+// Latin subset variable faces. The @font-face blocks Fontsource ships carry
+// `font-display: swap`, so text paints immediately in the fallback stack.
+import '@fontsource-variable/oswald/wght.css';
+import '@fontsource-variable/source-sans-3/wght.css';
+
+// The exact files the two @font-face rules above resolve to, imported as URLs
+// so the preload hint points at the hashed build artefact rather than a
+// hand-written path that would silently 404.
+import oswaldLatinWoff2 from '@fontsource-variable/oswald/files/oswald-latin-wght-normal.woff2?url';
+import sourceSans3LatinWoff2 from '@fontsource-variable/source-sans-3/files/source-sans-3-latin-wght-normal.woff2?url';
+
+import ogSource from '../assets/og-default.svg';
+import logoMark from '../assets/logo-mark.svg';
+
+import SiteHeader from '../components/SiteHeader.astro';
+import SiteFooter from '../components/SiteFooter.astro';
+import MobileCtaBar from '../components/MobileCtaBar.astro';
+
 import { business } from '../data/business';
 import {
   buildLocalBusinessJsonLd,
@@ -19,14 +44,51 @@ import {
 } from '../lib/structured-data';
 
 interface Props {
+  /** The page-specific part of the <title>. */
   title: string;
   description?: string;
+  /** Use `title` verbatim, without the " | J.Michael & Co" suffix. */
+  exactTitle?: boolean;
+  /** Keep this page out of the index. Used by /404 only. */
+  noindex?: boolean;
 }
 
-const { title, description = business.identity.shortDescription } = Astro.props;
+const {
+  title,
+  description = business.identity.shortDescription,
+  exactTitle = false,
+  noindex = false,
+} = Astro.props;
 
-// Astro.site comes from `site` in astro.config.mjs — still a placeholder.
-const canonicalUrl = new URL(Astro.url.pathname, Astro.site ?? Astro.url).href;
+const pageTitle = exactTitle
+  ? title
+  : `${title} | ${business.identity.shortName}`;
+
+// Astro.site comes from `site` in astro.config.mjs. TODO(client): that is still
+// a placeholder domain until the real one is decided.
+const siteOrigin = Astro.site ?? new URL(Astro.url.origin);
+// Always passed explicitly. astro-seo falls back to Astro.url.href when this
+// is undefined, which on a static build is the dev/preview origin rather than
+// the configured site.
+const canonicalUrl = new URL(Astro.url.pathname, siteOrigin).href;
+
+const ogImage = await getImage({
+  src: ogSource,
+  format: 'png',
+  width: 1200,
+  height: 630,
+});
+const ogImageUrl = new URL(ogImage.src, siteOrigin).href;
+const ogImageAlt = business.identity.tradingName;
+
+// 180x180 PNG for iOS home-screen icons, rasterised from the same source as
+// the favicon so the two can never drift apart.
+const appleTouchIcon = await getImage({
+  src: logoMark,
+  format: 'png',
+  width: 180,
+  height: 180,
+});
 
 const jsonLd = serialiseJsonLd(
   buildLocalBusinessJsonLd({ siteUrl: Astro.site }),
@@ -38,10 +100,75 @@ const jsonLd = serialiseJsonLd(
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <SEO title={title} description={description} canonical={canonicalUrl} />
+    <meta name="theme-color" content="#0B2A17" />
+
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <link rel="apple-touch-icon" href={appleTouchIcon.src} sizes="180x180" />
+
+    <link
+      rel="preload"
+      as="font"
+      type="font/woff2"
+      href={oswaldLatinWoff2}
+      crossorigin
+    />
+    <link
+      rel="preload"
+      as="font"
+      type="font/woff2"
+      href={sourceSans3LatinWoff2}
+      crossorigin
+    />
+
+    <SEO
+      title={pageTitle}
+      description={description}
+      canonical={canonicalUrl}
+      noindex={noindex}
+      nofollow={false}
+      openGraph={{
+        basic: {
+          title: pageTitle,
+          type: 'website',
+          image: ogImageUrl,
+          url: canonicalUrl,
+        },
+        optional: {
+          description,
+          siteName: business.identity.tradingName,
+          locale: 'en_GB',
+        },
+        image: {
+          url: ogImageUrl,
+          type: 'image/png',
+          width: 1200,
+          height: 630,
+          alt: ogImageAlt,
+        },
+      }}
+      twitter={{
+        card: 'summary_large_image',
+        title: pageTitle,
+        description,
+        image: ogImageUrl,
+        imageAlt: ogImageAlt,
+      }}
+    />
+
     <script type="application/ld+json" is:inline set:html={jsonLd} />
   </head>
   <body>
-    <slot />
+    <a class="skip-link" href="#main">Skip to content</a>
+
+    <SiteHeader />
+
+    <main id="main" tabindex="-1">
+      <slot />
+    </main>
+
+    <SiteFooter />
+
+    {/* Last element in the DOM, after the footer. Design system 4.6. */}
+    <MobileCtaBar />
   </body>
 </html>

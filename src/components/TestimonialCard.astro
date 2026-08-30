@@ -1,0 +1,31 @@
+---
+/**
+ * TestimonialCard.astro — docs/DESIGN_SYSTEM.md 4.9.
+ *
+ * Testimonials in src/data/business.ts are a discriminated union on
+ * `isPlaceholder`. This component switches on it, so a placeholder can never
+ * be rendered as though it were a genuine customer quote: the attribution is
+ * rewritten and the card is visibly marked.
+ */
+import StarRating from './StarRating.astro';
+import type { Testimonial } from '../data/business';
+
+interface Props {
+  testimonial: Testimonial;
+}
+
+const { testimonial } = Astro.props;
+
+// The discriminated union, switched on exactly once, here.
+const attribution = testimonial.isPlaceholder
+  ? `Placeholder review, to be replaced with a real Google review — ${testimonial.attribution}`
+  : testimonial.attribution;
+---
+
+<figure class="quote-card flex h-full flex-col">
+  <StarRating tone="light" size={20} />
+  <blockquote class="mt-3">
+    <p>{testimonial.quote}</p>
+  </blockquote>
+  <figcaption class="mt-4 text-caption text-muted">{attribution}</figcaption>
+</figure>

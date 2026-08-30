@@ -1,0 +1,106 @@
+---
+/**
+ * /pricing/ — docs/DESIGN_SYSTEM.md 5.3.
+ *
+ * The three tiers in ascending order (£40, £45, £50) in DOM order and visual
+ * order at every breakpoint, the emphasised adult card, and the parts caveat
+ * directly under the grid — never below the fold and never in small print.
+ *
+ * Every number is read from src/data/business.ts.
+ */
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import WhatsAppButton from '../../components/WhatsAppButton.astro';
+import Button from '../../components/Button.astro';
+import SectionHeading from '../../components/SectionHeading.astro';
+import PricingCard from '../../components/PricingCard.astro';
+import PartsCaveat from '../../components/PartsCaveat.astro';
+import ServicingPlanSteps from '../../components/ServicingPlanSteps.astro';
+import RatingPill from '../../components/RatingPill.astro';
+import CtaBand from '../../components/CtaBand.astro';
+import Icon from '../../components/Icon.astro';
+
+import { business } from '../../data/business';
+
+const { identity, pricing, servicingPlan } = business;
+
+const description = `Bicycle servicing prices in Bletchley, Milton Keynes: ${pricing.tiers
+  .map((tier) => `${tier.displayPrice} ${tier.heading.toLowerCase()}`)
+  .join(', ')}. Every price includes the full ${servicingPlan.points.length}-point servicing plan.`;
+---
+
+<BaseLayout title="Servicing prices" description={description}>
+  {/* 2. Intro ------------------------------------------------------------- */}
+  <section class="section">
+    <div class="container-page">
+      <span class="eyebrow mb-3">Pricing</span>
+      <h1>Servicing prices</h1>
+      <p class="lead mt-4 md:mt-5">
+        Three prices, one plan. Whichever tier your bike falls into, it gets the
+        same {servicingPlan.points.length} points of work, in the same order,
+        finished with a test ride.
+      </p>
+
+      <div class="mt-8">
+        <RatingPill />
+      </div>
+
+      {/* 3. The one-line adult statement, then the grid */}
+      <p class="mt-10 text-lead font-semibold text-heading">
+        {pricing.headlineStatement}
+      </p>
+
+      <ul class="mt-6 grid gap-4 md:grid-cols-3 md:gap-6">
+        {pricing.tiers.map((tier) => <PricingCard tier={tier} />)}
+      </ul>
+
+      {/* 4. Parts caveat, directly under the cards */}
+      <PartsCaveat class="mt-6" />
+    </div>
+  </section>
+
+  {/* 5. What every service includes ----------------------------------------- */}
+  <section class="section bg-surface-subtle">
+    <div class="container-page">
+      <SectionHeading
+        starRule
+        eyebrow="Included at every price"
+        heading={`What every service includes`}
+        lead={servicingPlan.title}
+      />
+
+      <ServicingPlanSteps variant="compact" class="mt-8 md:mt-10" />
+
+      <p class="mt-8">
+        <a class="link-standalone" href="/services/#servicing-plan">
+          See the full plan on the services page
+          <Icon name="chevronRight" size={16} />
+        </a>
+      </p>
+    </div>
+  </section>
+
+  {/* 6. Anything else is quoted individually --------------------------------- */}
+  <section class="section">
+    <div class="container-page">
+      <SectionHeading
+        eyebrow="Outside the plan"
+        heading="Anything else is quoted individually"
+        lead={pricing.customQuoteNote}
+      />
+
+      <div class="mt-8 flex flex-col gap-3 sm:flex-row sm:items-center">
+        <WhatsAppButton block label="Get a price on WhatsApp" class="sm:w-auto" />
+        <Button
+          href="/services/"
+          variant="secondary"
+          block
+          class="sm:w-auto"
+        >
+          See what {identity.ownerFirstName} fixes
+        </Button>
+      </div>
+    </div>
+  </section>
+
+  <CtaBand ctaLabel="Get a price on WhatsApp" />
+</BaseLayout>

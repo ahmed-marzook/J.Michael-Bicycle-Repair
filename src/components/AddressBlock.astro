@@ -1,0 +1,51 @@
+---
+/**
+ * AddressBlock.astro — the workshop address plus a directions link.
+ *
+ * Every line and the Google Maps URL come from src/data/business.ts. The
+ * postcode is on its own line because "MK2" is a local-search term people
+ * scan for.
+ */
+import Button from './Button.astro';
+import Icon from './Icon.astro';
+import { business } from '../data/business';
+
+interface Props {
+  /** Render the "Get directions" secondary button under the address. */
+  withDirections?: boolean;
+  class?: string;
+}
+
+const { withDirections = true, class: className } = Astro.props;
+const { address } = business;
+---
+
+<div class={className}>
+  <p class="flex items-start gap-3">
+    <span class="icon-tile" aria-hidden="true">
+      <Icon name="pin" size={24} />
+    </span>
+    <address class="text-base">
+      {address.street}<br />
+      {address.dependentLocality}<br />
+      {address.locality}, {address.region}<br />
+      {address.postcode}
+    </address>
+  </p>
+
+  {
+    withDirections ? (
+      <div class="mt-6">
+        <Button
+          href={address.directionsUrl}
+          variant="secondary"
+          icon="directions"
+          newTab
+          aria-label={`Get directions to ${address.formatted} on Google Maps`}
+        >
+          Get directions
+        </Button>
+      </div>
+    ) : null
+  }
+</div>

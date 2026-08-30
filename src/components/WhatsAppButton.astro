@@ -1,0 +1,49 @@
+---
+/**
+ * WhatsAppButton.astro — the single most important object on the site
+ * (docs/DESIGN_SYSTEM.md 4.1).
+ *
+ * The href is read from src/data/business.ts so no page or component ever
+ * carries the number. The label is always an action plus the person.
+ *
+ * Note the deliberate absence of WhatsApp brand green #25D366: with white text
+ * it measures 1.94:1 and fails AA badly. The CTA is brand-600 with the
+ * WhatsApp glyph instead (6.54:1). Design system 1.3.
+ */
+import Button from './Button.astro';
+import { business } from '../data/business';
+
+interface Props {
+  /** Override the label, e.g. "Get a price on WhatsApp" on /pricing/. */
+  label?: string;
+  /**
+   * Disambiguating accessible name, for the pricing grid where three buttons
+   * would otherwise share the label "WhatsApp Jimmy".
+   */
+  ariaLabel?: string;
+  block?: boolean;
+  compact?: boolean;
+  class?: string;
+}
+
+const {
+  label = `WhatsApp ${business.identity.ownerFirstName}`,
+  ariaLabel,
+  block = false,
+  compact = false,
+  class: className,
+} = Astro.props;
+---
+
+<Button
+  href={business.contact.whatsAppHref}
+  variant="primary"
+  icon="whatsapp"
+  block={block}
+  compact={compact}
+  newTab
+  aria-label={ariaLabel}
+  class={className}
+>
+  {label}
+</Button>

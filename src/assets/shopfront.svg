@@ -1,0 +1,32 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 800" width="1200" height="800" preserveAspectRatio="xMidYMid slice" role="img">
+  <rect width="1200" height="800" fill="#0B2A17"/>
+  <rect x="0" y="660" width="1200" height="140" fill="#2C3719"/>
+  <g stroke="#86C598" stroke-width="6" fill="none" stroke-linecap="round" stroke-linejoin="round">
+    <!-- unit frontage -->
+    <path d="M140 660 V236 H1060 V660"/>
+    <!-- fascia sign board, deliberately blank -->
+    <rect x="170" y="150" width="860" height="86" rx="10" fill="#2E8B4E" fill-opacity="0.28"/>
+    <!-- awning -->
+    <path d="M170 262 H1030 L998 330 H202z" fill="#2E8B4E" fill-opacity="0.18"/>
+    <path d="M254 262 L232 330 M338 262 L320 330 M422 262 L408 330 M506 262 L496 330 M590 262 L584 330 M674 262 L672 330 M758 262 L760 330 M842 262 L848 330 M926 262 L936 330"/>
+    <!-- shutter bay -->
+    <rect x="212" y="382" width="380" height="278" rx="8"/>
+    <path d="M212 424 H592 M212 466 H592 M212 508 H592 M212 550 H592 M212 592 H592"/>
+    <!-- door -->
+    <rect x="672" y="382" width="164" height="278" rx="8"/>
+    <rect x="700" y="410" width="108" height="120" rx="6" fill="#2E8B4E" fill-opacity="0.28"/>
+    <circle cx="808" cy="580" r="9" fill="#86C598" stroke="none"/>
+    <!-- window -->
+    <rect x="890" y="382" width="130" height="180" rx="8" fill="#2E8B4E" fill-opacity="0.2"/>
+    <!-- bike leaning by the door -->
+    <circle cx="920" cy="612" r="46"/>
+    <circle cx="1032" cy="612" r="46"/>
+    <path d="M948 612 L968 546 M968 550 L1020 550 M948 612 L1014 556 M920 612 L948 612 M920 612 L968 550 M1020 550 L1032 612"/>
+    <path d="M1012 540 L1042 530"/>
+    <path d="M956 540 h26"/>
+  </g>
+  <g fill="#F4C64A">
+    <path transform="translate(1112,120) scale(2.4)" d="M0-12 3.53-3.71 12.5-3.09 5.6 2.85 7.6 11.6 0 6.9-7.6 11.6-5.6 2.85-12.5-3.09-3.53-3.71Z"/>
+    <path transform="translate(90,120) scale(2.4)" d="M0-12 3.53-3.71 12.5-3.09 5.6 2.85 7.6 11.6 0 6.9-7.6 11.6-5.6 2.85-12.5-3.09-3.53-3.71Z"/>
+  </g>
+</svg>

@@ -1,0 +1,73 @@
+---
+/**
+ * Button.astro — docs/DESIGN_SYSTEM.md 4.1 and 4.2.
+ *
+ * Always an <a>, never a <button>: every action on this site is a link to
+ * WhatsApp, the phone, an email client or another page. There is deliberately
+ * no disabled state (4.1) — a link to WhatsApp is never disabled.
+ */
+import Icon, { type IconName } from './Icon.astro';
+
+interface Props {
+  href: string;
+  /** 'primary' is the green fill; 'secondary' is the 2px outline. */
+  variant?: 'primary' | 'secondary';
+  icon?: IconName;
+  /** Full width. Mobile buttons are full width and stack. */
+  block?: boolean;
+  /** 44px header variant. */
+  compact?: boolean;
+  /** Secondary sitting on a brand-900 band: white border and label. */
+  onDark?: boolean;
+  /** Opens a new tab, with the accessible-name suffix the design system requires. */
+  newTab?: boolean;
+  class?: string;
+  'aria-label'?: string;
+}
+
+const {
+  href,
+  variant = 'primary',
+  icon,
+  block = false,
+  compact = false,
+  onDark = false,
+  newTab = false,
+  class: className,
+  'aria-label': ariaLabel,
+} = Astro.props;
+
+/*
+ * An explicit aria-label REPLACES the element's content, so the visually hidden
+ * "(opens in a new tab)" span would be silently dropped. Fold it back in.
+ */
+const accessibleName =
+  ariaLabel === undefined
+    ? undefined
+    : newTab
+      ? `${ariaLabel} (opens in a new tab)`
+      : ariaLabel;
+
+const classes = [
+  'btn',
+  variant === 'primary' ? 'btn-primary' : 'btn-secondary',
+  onDark && variant === 'secondary' ? 'btn-on-dark' : null,
+  block ? 'btn-block' : null,
+  compact ? 'btn-compact' : null,
+  className,
+]
+  .filter(Boolean)
+  .join(' ');
+---
+
+<a
+  href={href}
+  class={classes}
+  aria-label={accessibleName}
+  target={newTab ? '_blank' : undefined}
+  rel={newTab ? 'noopener noreferrer' : undefined}
+>
+  {icon ? <Icon name={icon} size={20} /> : null}
+  <span><slot /></span>
+  {newTab ? <span class="sr-only-text">(opens in a new tab)</span> : null}
+</a>

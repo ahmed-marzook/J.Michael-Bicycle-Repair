@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512" role="img">
+  <!--
+    The brand mark: a condensed "JM" monogram drawn as paths (no live text, so
+    it rasterises identically everywhere and needs no font at build time), gold
+    on dark green, with one small star in the counter of the M. Must still read
+    at 32x32, so no fine detail.
+  -->
+  <rect width="512" height="512" rx="96" fill="#0B2A17"/>
+  <g transform="translate(18,27)" fill="#F4C64A">
+    <path d="M150 140 H184 V268 C184 296 162 318 134 318 H112 V284 H134 C143 284 150 277 150 268 Z"/>
+    <path d="M224 318 V140 H262 L294 232 L326 140 H364 V318 H330 V214 L308 272 H280 L258 214 V318 Z"/>
+  </g>
+  <path transform="translate(312,197) scale(1.6)" d="M0-12 3.53-3.71 12.5-3.09 5.6 2.85 7.6 11.6 0 6.9-7.6 11.6-5.6 2.85-12.5-3.09-3.53-3.71Z" fill="#F4C64A"/>
+</svg>

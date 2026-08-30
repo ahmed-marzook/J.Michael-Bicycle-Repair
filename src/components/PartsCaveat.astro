@@ -1,0 +1,19 @@
+---
+/**
+ * PartsCaveat.astro — docs/DESIGN_SYSTEM.md 4.8.
+ *
+ * "The cost of any parts and any cleaning is charged separately." This is part
+ * of the pricing component, sits directly under the grid, and is never
+ * relegated to the footer or to small print. The wording is the client's own,
+ * read from src/data/business.ts.
+ */
+import { business } from '../data/business';
+
+interface Props {
+  class?: string;
+}
+
+const { class: className } = Astro.props;
+---
+
+<p class:list={['note-box', className]}>{business.servicingPlan.partsCaveat}</p>

@@ -1,0 +1,27 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 600" width="600" height="600" preserveAspectRatio="xMidYMid slice" role="img">
+  <rect width="600" height="600" fill="#0B2A17"/>
+  <g stroke="#86C598" stroke-width="7" fill="none" stroke-linecap="round" stroke-linejoin="round">
+    <!-- chainring -->
+    <circle cx="270" cy="300" r="150" fill="#2E8B4E" fill-opacity="0.25"/>
+    <circle cx="270" cy="300" r="116" stroke-width="3" opacity="0.8"/>
+    <circle cx="270" cy="300" r="24" fill="#2E8B4E" stroke="none"/>
+    <path d="M270 300 L270 174 M270 300 L379 363 M270 300 L161 363"/>
+    <!-- teeth -->
+    <g stroke-width="4" opacity="0.9">
+      <path d="M270 138 v14 M383 187 l10 -10 M432 300 h14 M383 413 l10 10 M270 448 v14 M157 413 l-10 10 M108 300 h-14 M157 187 l-10 -10"/>
+    </g>
+    <!-- the chain, off the ring and hanging slack -->
+    <path d="M420 200 C470 260 470 400 392 470 C330 526 246 512 214 468" stroke-width="12" opacity="0.35"/>
+    <path d="M420 200 C470 260 470 400 392 470 C330 526 246 512 214 468"/>
+    <g stroke-width="3" opacity="0.8">
+      <circle cx="440" cy="256" r="11"/>
+      <circle cx="450" cy="330" r="11"/>
+      <circle cx="432" cy="400" r="11"/>
+      <circle cx="380" cy="462" r="11"/>
+      <circle cx="304" cy="496" r="11"/>
+    </g>
+  </g>
+  <g fill="#F4C64A">
+    <path transform="translate(500,110) scale(2.1)" d="M0-12 3.53-3.71 12.5-3.09 5.6 2.85 7.6 11.6 0 6.9-7.6 11.6-5.6 2.85-12.5-3.09-3.53-3.71Z"/>
+  </g>
+</svg>

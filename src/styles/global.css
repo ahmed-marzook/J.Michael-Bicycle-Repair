@@ -1,21 +1,955 @@
 /*
  * Tailwind CSS v4 entry point.
  * Imported once, from src/layouts/BaseLayout.astro.
+ *
+ * Design tokens below are transferred verbatim from docs/DESIGN_SYSTEM.md
+ * (sections 1.2, 2.2, 3.2, 3.3 and 7). Colour values are NOT to be changed:
+ * every contrast ratio in section 1.3 was computed against these exact hexes
+ * and altering one silently breaks the WCAG 2.2 AA guarantee.
  */
 @import "tailwindcss";
 
-/*
- * ---------------------------------------------------------------------------
- * DESIGN TOKENS — owned by the design agent (docs/DESIGN_SYSTEM.md).
- * ---------------------------------------------------------------------------
- * This block is intentionally EMPTY. The scaffold makes no visual decisions:
- * no colours, no fonts, no spacing, no radii are invented here.
- *
- * Drop the tokens from docs/DESIGN_SYSTEM.md in below using Tailwind v4's
- * @theme syntax, e.g. `--color-brand-600: <value>;` or `--font-sans: <stack>;`.
- * Each namespace prefix (--color-*, --font-*, --text-*, --spacing-*, ...)
- * generates the matching utility classes automatically.
- * ---------------------------------------------------------------------------
- */
 @theme {
+  /* ---- Brand green ramp (from the sign's bright and mid greens) ---- */
+  --color-brand-50:  #F1F8F2;
+  --color-brand-100: #DCEFE1;
+  --color-brand-200: #B7DEC2;
+  --color-brand-300: #86C598;
+  --color-brand-400: #4FA46B;
+  --color-brand-500: #2E8B4E;  /* the sign's bright green. Fills and graphics only. */
+  --color-brand-600: #1B6B3A;  /* primary action green */
+  --color-brand-700: #14532B;  /* links, hover, secondary button ink */
+  --color-brand-800: #0F3D21;  /* active / pressed */
+  --color-brand-900: #0B2A17;  /* headings, dark bands, footer */
+
+  /* ---- Olive (the sign's dark olive green). Second dark tone, used sparingly ---- */
+  --color-olive-700: #3C4A22;
+  --color-olive-800: #2C3719;
+
+  /* ---- Gold accent (the sign's five pointed stars) ---- */
+  --color-accent-300: #F4C64A;  /* stars and text ON dark green only */
+  --color-accent-400: #E0A81F;  /* badge and highlight BACKGROUNDS only */
+  --color-accent-500: #B67B06;  /* stars, rules and large text on light surfaces */
+  --color-accent-600: #8A5B00;  /* accent body text on light surfaces */
+
+  /* ---- Neutrals (green tinted) ---- */
+  --color-ink:            #111A14;  /* maximum contrast text, used rarely */
+  --color-body:           #33413A;  /* default body text */
+  --color-muted:          #5A6960;  /* captions, meta, secondary text */
+  --color-white:          #FFFFFF;
+  --color-canvas:         #F7F9F6;  /* page background */
+  --color-surface:        #FFFFFF;  /* cards, header */
+  --color-surface-subtle: #EEF4EE;  /* alternating section bands */
+  --color-border:         #788B80;  /* every visible 1px line on the site */
+  --color-border-inverse: #86C598;  /* lines on dark green surfaces */
+
+  /* ---- Semantic aliases (use these in markup, not the ramp numbers) ---- */
+  --color-primary:        var(--color-brand-600);
+  --color-primary-hover:  var(--color-brand-700);
+  --color-primary-active: var(--color-brand-800);
+  --color-heading:        var(--color-brand-900);
+  --color-link:           var(--color-brand-700);
+  --color-star:           var(--color-accent-500); /* on light */
+  --color-star-inverse:   var(--color-accent-300); /* on dark green */
+  --color-focus:          var(--color-brand-900);
+  --color-focus-offset:   var(--color-white);
+  --color-danger:         #B3261E;  /* 404 accent only. No error states exist. */
+
+  /* ---- Type families (design system 2.1) ---- */
+  --font-display: "Oswald Variable", "Oswald", "Archivo Narrow", "Roboto Condensed", "Arial Narrow", system-ui, sans-serif;
+  --font-body: "Source Sans 3 Variable", "Source Sans 3", "Source Sans Pro", system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+
+  /* ---- Type scale (design system 2.2). Clamps generated for 360px to 1280px. ---- */
+  --text-eyebrow:  0.8125rem;                                       /* 13px */
+  --text-caption:  0.875rem;                                        /* 14px */
+  --text-sm:       0.9375rem;                                       /* 15px */
+  --text-base:     1.0625rem;                                       /* 17px */
+  --text-lead:     clamp(1.125rem, 1.076rem + 0.217vw, 1.25rem);    /* 18 to 20 */
+  --text-h4:       clamp(1.125rem, 1.076rem + 0.217vw, 1.25rem);    /* 18 to 20 */
+  --text-h3:       clamp(1.3125rem, 1.239rem + 0.326vw, 1.5rem);    /* 21 to 24 */
+  --text-h2:       clamp(1.6875rem, 1.467rem + 0.978vw, 2.25rem);   /* 27 to 36 */
+  --text-h1:       clamp(2.125rem, 1.685rem + 1.96vw, 3.25rem);     /* 34 to 52 */
+  --text-display:  clamp(2.375rem, 1.739rem + 2.83vw, 4rem);        /* 38 to 64 */
+  --text-price:    clamp(2.5rem, 2.109rem + 1.74vw, 3.5rem);        /* 40 to 56 */
+
+  /*
+   * Paired line heights, taken from the table in design system 2.2. Tailwind v4
+   * emits `line-height: var(--text-NAME--line-height)` alongside every
+   * `text-NAME` utility; without these, framework defaults would leak in for
+   * the tokens whose names collide with Tailwind's own (sm, base).
+   */
+  --text-eyebrow--line-height: 1.2;
+  --text-caption--line-height: 1.45;
+  --text-sm--line-height:      1.55;
+  --text-base--line-height:    1.65;
+  --text-lead--line-height:    1.55;
+  --text-h4--line-height:      1.35;
+  --text-h3--line-height:      1.25;
+  --text-h2--line-height:      1.15;
+  --text-h1--line-height:      1.08;
+  --text-display--line-height: 1.05;
+  --text-price--line-height:   1;
+
+  /* ---- Radii (design system 3.2) ---- */
+  --radius-sm:   0.375rem;  /*  6px  chips, small badges */
+  --radius-md:   0.625rem;  /* 10px  buttons, inputs */
+  --radius-lg:   0.875rem;  /* 14px  cards */
+  --radius-xl:   1.25rem;   /* 20px  hero media, dark CTA band, illustration frames */
+  --radius-full: 9999px;    /*       rating pill, star chip */
+
+  /* ---- Shadows (design system 3.3). Tinted brand green, never neutral black. ---- */
+  --shadow-1: 0 1px 2px rgb(11 42 23 / 0.06), 0 1px 1px rgb(11 42 23 / 0.04);
+  --shadow-2: 0 2px 4px -1px rgb(11 42 23 / 0.08), 0 8px 16px -6px rgb(11 42 23 / 0.10);
+  --shadow-3: 0 -2px 12px rgb(11 42 23 / 0.12);
+
+  /*
+   * ---- Container widths (design system 3.1) ----
+   * The page container is Tailwind's own max-w-6xl (72rem / 1152px). These two
+   * add the prose column (720px) and the centred CTA block (640px) so neither
+   * needs an arbitrary bracket value at the call site.
+   */
+  --container-copy: 45rem; /* 720px */
+  --container-cta:  40rem; /* 640px */
+  --container-narrow: 35rem; /* 560px, the 404 block */
+
+  /* ---- Motion (design system 7) ---- */
+  --duration-fast: 150ms;
+  --ease-out: cubic-bezier(0.2, 0, 0, 1);
+}
+
+/* ===========================================================================
+ * BASE
+ * ======================================================================== */
+
+@layer base {
+  :root {
+    /* 52px button + 12px + 12px. Design system 4.6. */
+    --mobile-cta-h: 76px;
+  }
+
+  html {
+    font-family: var(--font-body);
+    /* Overridden to `auto` by the reduced-motion block at the end of this file. */
+    scroll-behavior: smooth;
+    /* Sticky header is 60px on mobile, 72px from md. Design system 4.4. */
+    scroll-padding-top: 76px;
+    -webkit-text-size-adjust: 100%;
+  }
+
+  @media (min-width: 48rem) {
+    html {
+      scroll-padding-top: 88px;
+    }
+  }
+
+  body {
+    margin: 0;
+    background-color: var(--color-canvas);
+    color: var(--color-body);
+    font-size: var(--text-base);
+    line-height: 1.65;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /*
+   * Reserve the height of the fixed mobile WhatsApp bar so it can never cover
+   * page content, including the last footer line. Design system 4.6 point 4.
+   */
+  @media (max-width: 767px) {
+    body {
+      padding-bottom: calc(var(--mobile-cta-h) + env(safe-area-inset-bottom));
+    }
+  }
+
+  h1,
+  h2,
+  h3,
+  h4 {
+    color: var(--color-heading);
+    text-wrap: balance;
+    margin: 0;
+  }
+
+  h1 {
+    font-family: var(--font-display);
+    font-weight: 600;
+    font-size: var(--text-h1);
+    line-height: 1.08;
+    max-width: 34ch;
+  }
+
+  h2 {
+    font-family: var(--font-display);
+    font-weight: 600;
+    font-size: var(--text-h2);
+    line-height: 1.15;
+    max-width: 34ch;
+  }
+
+  h3 {
+    font-family: var(--font-display);
+    font-weight: 500;
+    font-size: var(--text-h3);
+    line-height: 1.25;
+  }
+
+  /* Card titles are body face, not display. Design system 2.2. */
+  h4 {
+    font-family: var(--font-body);
+    font-weight: 700;
+    font-size: var(--text-h4);
+    line-height: 1.35;
+  }
+
+  p {
+    margin: 0;
+    text-wrap: pretty;
+    /*
+     * Long unbroken strings must never cause horizontal scroll at 320px.
+     * Design system 2.2.
+     */
+    hyphens: none;
+    overflow-wrap: break-word;
+  }
+
+  ul,
+  ol {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  address {
+    font-style: normal;
+  }
+
+  img,
+  svg {
+    display: block;
+  }
+
+  /*
+   * The one focus rule. Design system 4.14: 3px brand-900 outline, 2px offset,
+   * white inner ring filling the gap so it reads on white and on green alike.
+   * `outline: none` appears nowhere else in this stylesheet, for any reason.
+   */
+  :where(a, button, summary, [tabindex]):focus-visible {
+    outline: 3px solid var(--color-focus);
+    outline-offset: 2px;
+    box-shadow: 0 0 0 2px var(--color-focus-offset);
+    border-radius: var(--radius-md);
+  }
+
+  /*
+   * <main id="main" tabindex="-1"> is a skip-link target, not a control. It
+   * must not draw a ring when focus is moved to it programmatically. It is
+   * :focus, never :focus-visible, so the rule above is untouched.
+   */
+  main[tabindex="-1"]:focus {
+    outline: 3px solid transparent;
+  }
+}
+
+/* ===========================================================================
+ * COMPONENTS
+ * ======================================================================== */
+
+@layer components {
+  /* ---- 4.13 Skip link -------------------------------------------------- */
+  .skip-link {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+    border: 0;
+  }
+
+  .skip-link:focus {
+    position: fixed;
+    top: 8px;
+    left: 8px;
+    z-index: 100;
+    width: auto;
+    height: auto;
+    margin: 0;
+    overflow: visible;
+    clip-path: none;
+    padding: 12px 20px;
+    border-radius: var(--radius-md);
+    background-color: var(--color-brand-900);
+    color: var(--color-white);
+    font-family: var(--font-display);
+    font-weight: 600;
+    text-decoration: none;
+  }
+
+  /* ---- Visually hidden, still announced -------------------------------- */
+  .sr-only-text {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+    border: 0;
+  }
+
+  /* ---- 4.1 / 4.2 Buttons ----------------------------------------------- */
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    min-height: 52px;
+    min-width: 44px;
+    padding-inline: 24px;
+    border: 2px solid transparent;
+    border-radius: var(--radius-md);
+    font-family: var(--font-display);
+    font-weight: 600;
+    font-size: var(--text-base);
+    line-height: 1;
+    letter-spacing: 0.02em;
+    text-align: center;
+    text-decoration: none;
+    cursor: pointer;
+    transition-property: background-color, border-color, color, box-shadow, transform;
+    transition-duration: var(--duration-fast);
+    transition-timing-function: var(--ease-out);
+  }
+
+  @media (min-width: 40rem) {
+    .btn {
+      padding-inline: 28px;
+    }
+  }
+
+  .btn-primary,
+  .btn-primary:visited {
+    background-color: var(--color-brand-600);
+    border-color: var(--color-brand-600);
+    color: var(--color-white);
+    box-shadow: var(--shadow-1);
+  }
+
+  @media (hover: hover) {
+    .btn-primary:hover {
+      background-color: var(--color-brand-700);
+      border-color: var(--color-brand-700);
+      box-shadow: var(--shadow-2);
+      transform: translateY(-1px);
+    }
+  }
+
+  .btn-primary:active {
+    background-color: var(--color-brand-800);
+    border-color: var(--color-brand-800);
+    box-shadow: var(--shadow-1);
+    transform: translateY(0);
+  }
+
+  .btn-secondary,
+  .btn-secondary:visited {
+    background-color: transparent;
+    border-color: var(--color-brand-600);
+    color: var(--color-brand-700);
+  }
+
+  @media (hover: hover) {
+    .btn-secondary:hover {
+      background-color: var(--color-brand-50);
+      border-color: var(--color-brand-700);
+      color: var(--color-brand-700);
+    }
+  }
+
+  .btn-secondary:active {
+    background-color: var(--color-brand-100);
+  }
+
+  /* Secondary sitting on a brand-900 band. */
+  .btn-on-dark,
+  .btn-on-dark:visited {
+    background-color: transparent;
+    border-color: var(--color-white);
+    color: var(--color-white);
+  }
+
+  @media (hover: hover) {
+    .btn-on-dark:hover {
+      background-color: rgb(255 255 255 / 0.12);
+      border-color: var(--color-white);
+      color: var(--color-white);
+    }
+  }
+
+  .btn-on-dark:active {
+    background-color: rgb(255 255 255 / 0.2);
+  }
+
+  /* 44px variant for the desktop header. */
+  .btn-compact {
+    min-height: 44px;
+    padding-inline: 20px;
+  }
+
+  .btn-block {
+    width: 100%;
+  }
+
+  /* ---- 4.3 Tertiary / text link ---------------------------------------- */
+  .link {
+    color: var(--color-link);
+    text-decoration: underline;
+    text-underline-offset: 0.18em;
+    text-decoration-thickness: 0.08em;
+    transition: color var(--duration-fast) var(--ease-out),
+      text-decoration-thickness var(--duration-fast) var(--ease-out);
+  }
+
+  @media (hover: hover) {
+    .link:hover {
+      color: var(--color-brand-800);
+      text-decoration-thickness: 0.12em;
+    }
+  }
+
+  /* Standalone link with a chevron. 44px tap target even at 17px text. */
+  .link-standalone {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    min-height: 44px;
+    font-family: var(--font-display);
+    font-weight: 500;
+    color: var(--color-link);
+    text-decoration: underline;
+    text-underline-offset: 0.18em;
+    text-decoration-thickness: 0.08em;
+    transition: color var(--duration-fast) var(--ease-out);
+  }
+
+  @media (hover: hover) {
+    .link-standalone:hover {
+      color: var(--color-brand-800);
+      text-decoration-thickness: 0.12em;
+    }
+  }
+
+  .link-on-dark,
+  .link-on-dark:visited {
+    color: var(--color-brand-100);
+  }
+
+  /*
+   * WCAG 2.2 AA target size. 44px is not on the design system's spacing scale
+   * on purpose: it is a hit-area floor, not a layout step, so it gets its own
+   * class rather than an arbitrary bracket value.
+   */
+  .tap-target {
+    min-height: 44px;
+    min-width: 44px;
+  }
+
+  /* ---- Typography helpers ---------------------------------------------- */
+  .eyebrow {
+    display: block;
+    font-family: var(--font-display);
+    font-weight: 600;
+    font-size: var(--text-eyebrow);
+    line-height: 1.2;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--color-brand-700);
+  }
+
+  .eyebrow-on-dark {
+    color: var(--color-accent-300);
+  }
+
+  .lead {
+    font-size: var(--text-lead);
+    line-height: 1.55;
+    max-width: 60ch;
+    text-wrap: pretty;
+  }
+
+  .measure {
+    max-width: 68ch;
+  }
+
+  /* ---- Layout ---------------------------------------------------------- */
+  .container-page {
+    width: 100%;
+    max-width: 72rem; /* 1152px */
+    margin-inline: auto;
+    padding-inline: 20px;
+  }
+
+  @media (min-width: 48rem) {
+    .container-page {
+      padding-inline: 32px;
+    }
+  }
+
+  .section {
+    padding-block: 48px;
+  }
+
+  @media (min-width: 48rem) {
+    .section {
+      padding-block: 96px;
+    }
+  }
+
+  .band-dark {
+    background-color: var(--color-brand-900);
+    color: var(--color-brand-100);
+    padding-block: 56px;
+  }
+
+  @media (min-width: 48rem) {
+    .band-dark {
+      padding-block: 80px;
+    }
+  }
+
+  .band-dark h1,
+  .band-dark h2,
+  .band-dark h3,
+  .band-dark h4 {
+    color: var(--color-white);
+  }
+
+  /* ---- 4.7 Card -------------------------------------------------------- */
+  .card {
+    background-color: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-1);
+    padding: 20px;
+  }
+
+  @media (min-width: 48rem) {
+    .card {
+      padding: 24px;
+    }
+  }
+
+  /* 40x40 brand-50 square that every card icon sits in. */
+  .icon-tile {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 40px;
+    flex: none;
+    border-radius: var(--radius-sm);
+    background-color: var(--color-brand-50);
+    color: var(--color-brand-600);
+  }
+
+  /*
+   * ---- Contact channel row (design system 5.5 step 3) ----
+   * A full-width row on `surface`, at least 64px tall, where the WHOLE row is
+   * the link. Unlike the service card this one really does navigate, so a
+   * hover affordance is correct here.
+   */
+  .channel-row {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    min-height: 64px;
+    padding: 12px 20px;
+    background-color: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-1);
+    color: var(--color-body);
+    text-decoration: none;
+    transition-property: background-color, border-color, box-shadow;
+    transition-duration: var(--duration-fast);
+    transition-timing-function: var(--ease-out);
+  }
+
+  @media (hover: hover) {
+    .channel-row:hover {
+      background-color: var(--color-brand-50);
+      border-color: var(--color-brand-600);
+      box-shadow: var(--shadow-2);
+    }
+  }
+
+  .channel-row .channel-name {
+    font-family: var(--font-body);
+    font-weight: 700;
+    font-size: var(--text-h4);
+    line-height: 1.35;
+    color: var(--color-heading);
+  }
+
+  .channel-row .channel-value {
+    font-size: var(--text-sm);
+    color: var(--color-muted);
+    overflow-wrap: anywhere;
+  }
+
+  /* ---- 4.8 Parts caveat note box --------------------------------------- */
+  .note-box {
+    background-color: var(--color-surface-subtle);
+    border: 1px solid var(--color-border);
+    border-left: 4px solid var(--color-brand-500);
+    border-radius: var(--radius-lg);
+    padding: 20px;
+    font-size: var(--text-sm);
+    line-height: 1.55;
+    color: var(--color-body);
+  }
+
+  /* ---- 4.9 Review card ------------------------------------------------- */
+  .quote-card {
+    background-color: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-left: 4px solid var(--color-brand-500);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-1);
+    padding: 20px;
+    margin: 0;
+  }
+
+  /* ---- 4.10 Rating pill ------------------------------------------------ */
+  .rating-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    min-height: 44px;
+    padding: 10px 16px;
+    border-radius: var(--radius-full);
+    background-color: var(--color-brand-900);
+    color: var(--color-brand-100);
+    font-size: var(--text-sm);
+    text-decoration: none;
+    transition: background-color var(--duration-fast) var(--ease-out);
+  }
+
+  @media (hover: hover) {
+    a.rating-pill:hover {
+      background-color: var(--color-brand-800);
+    }
+  }
+
+  /* ---- 4.4 Header ------------------------------------------------------ */
+  .site-header {
+    position: sticky;
+    top: 0;
+    z-index: 40;
+    background-color: var(--color-surface);
+    border-bottom: 1px solid var(--color-border);
+    box-shadow: var(--shadow-1);
+  }
+
+  .header-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    min-height: 60px;
+    /* Clears the absolutely positioned 44x44 hamburger. */
+    padding-right: 56px;
+  }
+
+  @media (min-width: 48rem) {
+    .header-bar {
+      min-height: 72px;
+      padding-right: 0;
+    }
+  }
+
+  .logotype {
+    display: inline-flex;
+    flex-direction: column;
+    justify-content: center;
+    min-height: 44px;
+    text-decoration: none;
+  }
+
+  .logotype-name {
+    font-family: var(--font-display);
+    font-weight: 600;
+    font-size: 18px;
+    line-height: 1.1;
+    letter-spacing: 0.04em;
+    color: var(--color-brand-900);
+  }
+
+  .logotype-strap {
+    font-family: var(--font-body);
+    font-weight: 400;
+    font-size: 12px;
+    line-height: 1.2;
+    color: var(--color-muted);
+  }
+
+  .nav-link {
+    display: inline-flex;
+    align-items: center;
+    min-height: 44px;
+    padding-block: 14px;
+    font-family: var(--font-display);
+    font-weight: 500;
+    font-size: 16px;
+    letter-spacing: 0.02em;
+    color: var(--color-brand-900);
+    text-decoration: none;
+    border-bottom: 2px solid transparent;
+    transition: color var(--duration-fast) var(--ease-out),
+      border-color var(--duration-fast) var(--ease-out);
+  }
+
+  @media (hover: hover) {
+    .nav-link:hover {
+      color: var(--color-brand-700);
+      border-bottom-color: var(--color-brand-600);
+    }
+  }
+
+  .nav-link[aria-current="page"] {
+    color: var(--color-brand-700);
+    border-bottom-color: var(--color-brand-600);
+  }
+
+  /* ---- 4.5 Mobile nav: a native <details> disclosure, zero JS ---------- */
+  /*
+   * The <details> element itself is a full-width, in-flow block: the panel it
+   * opens pushes the page down rather than covering it. Only the 44x44
+   * <summary> is lifted into the header bar, so the bar keeps its own layout.
+   */
+  .nav-disclosure > summary {
+    position: absolute;
+    top: 8px;
+    right: 20px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 44px;
+    height: 44px;
+    cursor: pointer;
+    color: var(--color-brand-900);
+    list-style: none;
+  }
+
+  .nav-disclosure > summary::-webkit-details-marker {
+    display: none;
+  }
+
+  .nav-disclosure > summary::marker {
+    content: "";
+  }
+
+  .nav-disclosure .icon-close {
+    display: none;
+  }
+
+  .nav-disclosure[open] .icon-open {
+    display: none;
+  }
+
+  .nav-disclosure[open] .icon-close {
+    display: block;
+  }
+
+  /*
+   * The open panel sits in normal flow below the header: it cannot overlay
+   * content and it cannot trap focus. Design system 4.5.
+   */
+  .nav-panel {
+    background-color: var(--color-surface);
+    border-top: 1px solid var(--color-border);
+    border-bottom: 1px solid var(--color-border);
+  }
+
+  .nav-panel a {
+    display: flex;
+    align-items: center;
+    min-height: 52px;
+    padding-inline: 20px;
+    font-family: var(--font-display);
+    font-weight: 500;
+    font-size: 17px;
+    letter-spacing: 0.02em;
+    color: var(--color-brand-900);
+    text-decoration: none;
+    border-bottom: 1px solid var(--color-border);
+  }
+
+  .nav-panel li:last-child a {
+    border-bottom: 0;
+  }
+
+  .nav-panel a[aria-current="page"] {
+    color: var(--color-brand-700);
+    background-color: var(--color-brand-50);
+  }
+
+  /* ---- 4.6 Persistent mobile WhatsApp bar ------------------------------ */
+  .mobile-cta {
+    position: fixed;
+    inset-inline: 0;
+    bottom: 0;
+    z-index: 50;
+    background-color: var(--color-surface);
+    border-top: 1px solid var(--color-border);
+    box-shadow: var(--shadow-3);
+    padding: 12px 20px;
+    padding-bottom: calc(12px + env(safe-area-inset-bottom));
+  }
+
+  /* ---- 4.12 Footer ----------------------------------------------------- */
+  .site-footer {
+    background-color: var(--color-brand-900);
+    color: var(--color-brand-100);
+  }
+
+  .footer-heading {
+    font-family: var(--font-display);
+    font-weight: 600;
+    font-size: 15px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--color-accent-300);
+  }
+
+  .footer-link {
+    display: inline-flex;
+    align-items: center;
+    min-height: 44px;
+    padding-block: 12px;
+    color: var(--color-brand-100);
+    text-decoration: none;
+    overflow-wrap: anywhere;
+  }
+
+  @media (hover: hover) {
+    .footer-link:hover {
+      text-decoration: underline;
+      text-underline-offset: 0.18em;
+    }
+  }
+
+  .footer-link:focus-visible {
+    text-decoration: underline;
+  }
+
+  .footer-meta {
+    color: var(--color-brand-200);
+    font-size: var(--text-caption);
+    line-height: 1.45;
+  }
+
+  /* ---- Prices ---------------------------------------------------------- */
+  .price {
+    font-family: var(--font-display);
+    font-weight: 600;
+    font-size: var(--text-price);
+    line-height: 1;
+    color: var(--color-brand-900);
+    font-variant-numeric: tabular-nums lining-nums;
+  }
+
+  /* ---- 4.8 Emphasised pricing card ------------------------------------- */
+  .card-emphasis {
+    border: 2px solid var(--color-brand-600);
+    box-shadow: var(--shadow-2);
+  }
+
+  .card-emphasis-rule {
+    height: 4px;
+    background-color: var(--color-accent-400);
+  }
+
+  .badge {
+    display: inline-flex;
+    align-items: center;
+    border-radius: var(--radius-sm);
+    background-color: var(--color-accent-400);
+    color: var(--color-brand-900);
+    font-family: var(--font-display);
+    font-weight: 600;
+    font-size: var(--text-eyebrow);
+    letter-spacing: 0.04em;
+    padding: 4px 8px;
+  }
+
+  .chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    border-radius: var(--radius-full);
+    background-color: var(--color-brand-100);
+    color: var(--color-brand-900);
+    font-size: var(--text-sm);
+    padding: 8px 16px;
+  }
+
+  /* ---- Star colours ---------------------------------------------------- */
+  .stars-on-light {
+    color: var(--color-star);
+  }
+
+  .stars-on-dark {
+    color: var(--color-star-inverse);
+  }
+
+  /* ---- Illustration frame ---------------------------------------------- */
+  .illustration {
+    border-radius: var(--radius-xl);
+    border: 1px solid var(--color-border);
+    overflow: hidden;
+    background-color: var(--color-brand-900);
+  }
+
+  /*
+   * Placeholder artwork is inlined as an Astro SVG component, so it carries its
+   * own intrinsic width/height attributes and cannot shift layout.
+   */
+  .illustration > img,
+  .illustration > svg {
+    display: block;
+    width: 100%;
+    height: auto;
+  }
+
+  /* Gold star bullets on the servicing plan. Design system 1.4. */
+  .star-list > li {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+  }
+}
+
+/* ===========================================================================
+ * REDUCED MOTION - design system 7. Nothing is exempt.
+ * ======================================================================== */
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+
+  /* The colour change alone carries the hover; the lift is suppressed. */
+  .btn-primary:hover,
+  .btn-primary:active {
+    transform: none !important;
+  }
 }

@@ -1,0 +1,140 @@
+---
+/**
+ * /about/ — docs/DESIGN_SYSTEM.md 5.4.
+ *
+ * The story copy lives in `business.about` in src/data/business.ts, written
+ * only from facts in docs/PROJECT_BRIEF.md. Nothing here claims a
+ * qualification, a number of years in the trade, or a biography the brief does
+ * not contain: those are TODO(client) items in the data file and are omitted
+ * from the page until the client answers, rather than guessed at.
+ */
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import SectionHeading from '../../components/SectionHeading.astro';
+import RatingPill from '../../components/RatingPill.astro';
+import CtaBand from '../../components/CtaBand.astro';
+import Icon from '../../components/Icon.astro';
+import Star from '../../assets/star.svg';
+
+// TODO(client): replace with a real head-and-shoulders photograph of Jimmy in
+// the workshop.
+import PortraitJimmy from '../../assets/portrait-jimmy.svg';
+// TODO(client): replace with a real photograph of the unit frontage on
+// Tavistock Street with the sign visible.
+import Shopfront from '../../assets/shopfront.svg';
+
+import { business } from '../../data/business';
+
+const { identity, address, about, reviews } = business;
+
+const description = `About ${identity.ownerFirstName} and ${identity.legalName} — a one-man bicycle workshop in Fenny Stratford, Bletchley, serving riders across Milton Keynes.`;
+---
+
+<BaseLayout
+  title={`About ${identity.ownerFirstName}`}
+  description={description}
+>
+  {/* 2. Intro -------------------------------------------------------------- */}
+  <section class="section">
+    <div class="container-page">
+      <span class="eyebrow mb-3">About</span>
+      <h1>About {identity.ownerFirstName} and {identity.legalName}</h1>
+      <p class="lead mt-4 md:mt-5">{about.lead}</p>
+
+      {/* 3. Portrait plus story ------------------------------------------- */}
+      <div class="mt-10 grid gap-8 lg:grid-cols-12 lg:items-start lg:gap-16">
+        <div class="mx-auto w-full max-w-80 lg:col-span-4 lg:mx-0 lg:max-w-none">
+          <div class="illustration">
+            <PortraitJimmy
+              role="img"
+              aria-label={`${identity.ownerFirstName}, the mechanic and owner of ${identity.spokenName}`}
+            />
+          </div>
+        </div>
+
+        <div class="measure grid gap-4 lg:col-span-8">
+          {about.story.map((paragraph) => <p>{paragraph}</p>)}
+        </div>
+      </div>
+    </div>
+  </section>
+
+  {/* 4. Why local matters ---------------------------------------------------- */}
+  <section class="section bg-surface-subtle">
+    <div class="container-page">
+      <SectionHeading
+        eyebrow="Why local matters"
+        heading="A workshop you can walk to"
+        lead={`Serving ${address.areaServed.join(', ')}.`}
+      />
+
+      <div class="measure mt-8 grid gap-4">
+        {about.whyLocal.map((paragraph) => <p>{paragraph}</p>)}
+      </div>
+    </div>
+  </section>
+
+  {/* 5. Credentials. FACTS ONLY — see the TODO(client) in business.ts. ------- */}
+  <section class="section">
+    <div class="container-page">
+      <SectionHeading
+        starRule
+        eyebrow="What you can count on"
+        heading="How the workshop works"
+      />
+
+      <ul class="star-list mt-8 grid gap-3 md:grid-cols-2 md:gap-x-6">
+        {
+          about.credentials.map((credential) => (
+            <li>
+              <Star
+                width={16}
+                height={16}
+                focusable="false"
+                aria-hidden="true"
+                class="stars-on-light mt-1 shrink-0"
+              />
+              <span>{credential}</span>
+            </li>
+          ))
+        }
+      </ul>
+
+      {/* 6. Rating pill plus the link out to the real listing */}
+      <div class="mt-10 flex flex-col items-start gap-4 sm:flex-row sm:items-center sm:gap-6">
+        <RatingPill />
+        <a
+          class="link-standalone"
+          href={reviews.aggregate.sourceUrl}
+          target="_blank"
+          rel="noopener noreferrer"
+        >
+          Read all {reviews.aggregate.reviewCount} reviews on {
+            reviews.aggregate.sourceLabel
+          }
+          <Icon name="external" size={16} />
+          <span class="sr-only-text">(opens in a new tab)</span>
+        </a>
+      </div>
+    </div>
+  </section>
+
+  {/* 7. Shopfront, with the address as its caption --------------------------- */}
+  <section class="section bg-surface-subtle">
+    <div class="container-page">
+      <figure>
+        <div class="illustration">
+          <Shopfront
+            role="img"
+            aria-label={`The ${identity.spokenName} shopfront on ${address.streetName}, ${address.dependentLocality}`}
+          />
+        </div>
+        <figcaption class="mt-4 flex items-start gap-3 text-sm text-muted">
+          <Icon name="pin" size={20} class="mt-1 shrink-0 text-brand-600" />
+          <span>{address.formatted}</span>
+        </figcaption>
+      </figure>
+    </div>
+  </section>
+
+  <CtaBand />
+</BaseLayout>

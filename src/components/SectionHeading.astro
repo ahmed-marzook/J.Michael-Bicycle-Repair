@@ -1,0 +1,78 @@
+---
+/**
+ * SectionHeading.astro — docs/DESIGN_SYSTEM.md 4.11.
+ *
+ * The same three-part block on every major section: eyebrow, real heading,
+ * one sentence of context. Left aligned on mobile and on desktop.
+ *
+ * The eyebrow is decorative context, never the only label and never a link.
+ * Heading levels are honest: pass `level` to keep the document outline right,
+ * never to pick a size.
+ */
+import Star from '../assets/star.svg';
+
+interface Props {
+  eyebrow?: string;
+  heading: string;
+  lead?: string;
+  level?: 'h1' | 'h2' | 'h3';
+  /** Optional three-star gold rule above the eyebrow. At most two per page. */
+  starRule?: boolean;
+  /** On a brand-900 band. */
+  onDark?: boolean;
+  /** Applies the larger `display` token. Home-page h1 only. */
+  display?: boolean;
+  class?: string;
+}
+
+const {
+  eyebrow,
+  heading,
+  lead,
+  level = 'h2',
+  starRule = false,
+  onDark = false,
+  display = false,
+  class: className,
+} = Astro.props;
+
+const Heading = level;
+---
+
+<div class={className}>
+  {
+    starRule ? (
+      <span
+        class:list={[
+          'mb-3 flex items-center gap-2',
+          onDark ? 'stars-on-dark' : 'stars-on-light',
+        ]}
+        aria-hidden="true"
+      >
+        <Star width={12} height={12} focusable="false" />
+        <Star width={12} height={12} focusable="false" />
+        <Star width={12} height={12} focusable="false" />
+      </span>
+    ) : null
+  }
+  {
+    eyebrow ? (
+      <span class:list={['eyebrow', onDark ? 'eyebrow-on-dark' : null, 'mb-3']}>
+        {eyebrow}
+      </span>
+    ) : null
+  }
+  <Heading class:list={[display ? 'text-display' : null]}>{heading}</Heading>
+  {
+    lead ? (
+      <p
+        class:list={[
+          'lead mt-3 md:mt-4',
+          onDark ? 'text-brand-100' : 'text-muted',
+        ]}
+      >
+        {lead}
+      </p>
+    ) : null
+  }
+</div>

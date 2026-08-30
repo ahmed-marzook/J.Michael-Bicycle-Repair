@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 600" width="900" height="600" preserveAspectRatio="xMidYMid slice" role="img">
+  <rect width="900" height="600" fill="#0B2A17"/>
+  <g stroke="#86C598" stroke-width="6" fill="none" stroke-linecap="round" stroke-linejoin="round">
+    <!-- truing stand -->
+    <path d="M250 540 H650 M450 540 V430"/>
+    <path d="M300 430 H600"/>
+    <path d="M320 430 V250 M580 430 V250"/>
+    <path d="M320 250 L392 250 M580 250 L508 250"/>
+    <!-- gauge arm -->
+    <path d="M600 350 H676 M676 350 v-40 h56 v80 h-56z" />
+    <!-- wheel -->
+    <circle cx="450" cy="286" r="188" stroke-width="8"/>
+    <circle cx="450" cy="286" r="170" stroke-width="3" opacity="0.7"/>
+    <circle cx="450" cy="286" r="26" fill="#2E8B4E" stroke="none"/>
+    <g stroke-width="3" opacity="0.85">
+      <path d="M450 104 V468 M268 286 H632 M321 157 L579 415 M579 157 L321 415 M377 116 L523 456 M523 116 L377 456 M280 213 L620 359 M620 213 L280 359"/>
+    </g>
+  </g>
+  <g fill="#F4C64A">
+    <path transform="translate(806,96) scale(2.2)" d="M0-12 3.53-3.71 12.5-3.09 5.6 2.85 7.6 11.6 0 6.9-7.6 11.6-5.6 2.85-12.5-3.09-3.53-3.71Z"/>
+    <path transform="translate(96,470) scale(1.8)" d="M0-12 3.53-3.71 12.5-3.09 5.6 2.85 7.6 11.6 0 6.9-7.6 11.6-5.6 2.85-12.5-3.09-3.53-3.71Z"/>
+  </g>
+</svg>

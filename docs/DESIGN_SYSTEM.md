@@ -1158,7 +1158,7 @@ information is lost when motion is removed.
 
 **Next**
 
-- The implementation agent (AGENTS.md 5.2) scaffolds Astro 5 plus Tailwind v4,
+- The implementation agent (AGENTS.md 5.2) scaffolds Astro 7 plus Tailwind v4,
   pastes the `@theme` blocks verbatim into `src/styles/global.css`, builds
   `src/data/business.ts` from the brief, then builds the layouts, components and
   the six routes to the specs in sections 4 and 5, working the checklist in

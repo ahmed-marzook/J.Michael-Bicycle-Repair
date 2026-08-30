@@ -1,0 +1,37 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 900" width="1200" height="900" preserveAspectRatio="xMidYMid slice" role="img">
+  <rect width="1200" height="900" fill="#0B2A17"/>
+  <rect x="0" y="700" width="1200" height="200" fill="#2C3719"/>
+  <g stroke="#86C598" stroke-width="6" fill="none" stroke-linecap="round" stroke-linejoin="round">
+    <!-- tool rail -->
+    <path d="M840 120 H1120"/>
+    <path d="M888 120 v70 m0 0 a26 26 0 1 0 0.1 0"/>
+    <path d="M980 120 v54 h34 v-54 m-17 54 v72"/>
+    <path d="M1072 120 v46 a22 22 0 0 0 -22 22 v46 h44 v-46 a22 22 0 0 0 -22 -22z"/>
+    <!-- repair stand -->
+    <path d="M96 800 H300 M198 800 V430"/>
+    <path d="M198 452 L534 416"/>
+    <path d="M520 396 h44 v42 h-44z"/>
+    <!-- wheels -->
+    <circle cx="356" cy="596" r="152"/>
+    <circle cx="840" cy="596" r="152"/>
+    <circle cx="356" cy="596" r="18" fill="#2E8B4E" stroke="none"/>
+    <circle cx="840" cy="596" r="18" fill="#2E8B4E" stroke="none"/>
+    <g stroke-width="3" opacity="0.85">
+      <path d="M356 452 V740 M212 596 H500 M254 494 L458 698 M458 494 L254 698"/>
+      <path d="M840 452 V740 M696 596 H984 M738 494 L942 698 M942 494 L738 698"/>
+    </g>
+    <!-- frame -->
+    <path d="M600 620 L556 372 M556 380 L774 380 M600 620 L764 388 M356 596 L600 620 M356 596 L556 380 M774 380 L840 596"/>
+    <path d="M760 356 L806 340"/>
+    <path d="M806 340 L866 314 M806 340 L790 300"/>
+    <path d="M528 348 h68 l-14 26 h-58z" fill="#2E8B4E" stroke="none"/>
+    <path d="M556 372 V348"/>
+    <!-- chainring and cranks -->
+    <circle cx="600" cy="620" r="58" fill="#2E8B4E" fill-opacity="0.35"/>
+    <path d="M600 620 L648 660 M600 620 L552 580"/>
+  </g>
+  <g fill="#F4C64A">
+    <path transform="translate(1108,760) scale(2.6)" d="M0-12 3.53-3.71 12.5-3.09 5.6 2.85 7.6 11.6 0 6.9-7.6 11.6-5.6 2.85-12.5-3.09-3.53-3.71Z"/>
+    <path transform="translate(120,180) scale(1.9)" d="M0-12 3.53-3.71 12.5-3.09 5.6 2.85 7.6 11.6 0 6.9-7.6 11.6-5.6 2.85-12.5-3.09-3.53-3.71Z"/>
+  </g>
+</svg>
