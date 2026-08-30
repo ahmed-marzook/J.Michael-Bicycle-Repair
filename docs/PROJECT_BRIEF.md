@@ -98,7 +98,10 @@ inventing prices.
 
 ## 6. Technical requirements
 
-- **Astro** (latest stable, v5.x), **static output** — no SSR, no server adapter.
+- **Astro** — latest stable (**7.x**), **static output**, no SSR, no server
+  adapter. An earlier draft of this brief said "v5.x"; that was wrong. The 5.x
+  line is unpatched and carries known `sharp`/libvips and esbuild advisories,
+  and `astro:assets` uses sharp, so we stay current.
 - **Tailwind CSS v4** via the official `@tailwindcss/vite` plugin (this is the
   current supported path; the old `@astrojs/tailwind` integration is deprecated).
 - **TypeScript** in `strict` mode.
