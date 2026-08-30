@@ -1,0 +1,7 @@
+# Allow every crawler across the whole site.
+User-agent: *
+Allow: /
+
+# TODO(client): this host must match `site` in astro.config.mjs.
+# Both are placeholders until the production domain is decided.
+Sitemap: https://example.com/sitemap-index.xml

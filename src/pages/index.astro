@@ -1,0 +1,42 @@
+---
+/**
+ * index.astro — SCAFFOLD PLACEHOLDER.
+ *
+ * Exists only to give the build a route and to prove the data layer, the
+ * layout and Tailwind all compile together. No layout work, no styling, no
+ * copy decisions: the implementation agent replaces this file entirely with
+ * the real home page (hero, trust signals, services, pricing teaser, reviews,
+ * location, contact CTA) per docs/PROJECT_BRIEF.md section 5.
+ */
+import BaseLayout from '../layouts/BaseLayout.astro';
+import { business } from '../data/business';
+
+const { identity, contact, address, pricing, reviews } = business;
+---
+
+<BaseLayout title={identity.tradingName}>
+  <main>
+    <h1>{identity.tradingName}</h1>
+    <p>{identity.shortDescription}</p>
+
+    <p>
+      <a href={contact.whatsAppHref}>WhatsApp {identity.ownerFirstName}</a>
+      &middot;
+      <a href={contact.telHref}>{contact.phoneDisplay}</a>
+    </p>
+
+    <p>
+      <a href={address.directionsUrl}>{address.formatted}</a>
+    </p>
+
+    <p>
+      {reviews.aggregate.ratingValue.toFixed(1)} from{' '}
+      {reviews.aggregate.reviewCount} reviews on{' '}
+      <a href={reviews.aggregate.sourceUrl}>{reviews.aggregate.sourceLabel}</a>
+    </p>
+
+    <p>Servicing from {pricing.tiers[0]?.displayPrice}. {pricing.includesNote}</p>
+
+    <p><small>Scaffold placeholder page — replace with the real home page.</small></p>
+  </main>
+</BaseLayout>

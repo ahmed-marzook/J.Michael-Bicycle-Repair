@@ -183,7 +183,11 @@ uncommitted; never checkpoint a broken tree.
 
 **Rules**
 
-- Work on a feature branch, not `main`.
+- Work on a feature branch, not `main`. Current branch: `feat/website-build`.
+- **The orchestrator owns the commits.** When agents run concurrently they must
+  not run `git` at all — two agents staging at once races the index. Subagents
+  finish their work, leave the tree in a buildable state, and report; the
+  orchestrating agent stages and commits the checkpoint.
 - Stage deliberately (`git add <paths>`), never `git add -A` on a tree another
   agent is concurrently writing to.
 - One logical change per commit. Do not bundle a redesign with a bug fix.
