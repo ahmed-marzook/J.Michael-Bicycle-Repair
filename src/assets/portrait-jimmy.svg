@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 800" width="800" height="800" preserveAspectRatio="xMidYMid slice" role="img">
+  <rect width="800" height="800" fill="#0B2A17"/>
+  <circle cx="400" cy="400" r="300" fill="#2C3719"/>
+  <g stroke="#86C598" stroke-width="8" fill="none" stroke-linecap="round" stroke-linejoin="round">
+    <!-- shoulders -->
+    <path d="M186 690 c0 -128 96 -212 214 -212 s214 84 214 212" fill="#2E8B4E" fill-opacity="0.3"/>
+    <path d="M330 500 c22 30 118 30 140 0"/>
+    <!-- head -->
+    <circle cx="400" cy="366" r="126" fill="#2E8B4E" fill-opacity="0.3"/>
+    <!-- workshop cap -->
+    <path d="M272 322 c14 -86 84 -130 128 -130 s114 44 128 130z" fill="#2E8B4E" fill-opacity="0.5"/>
+    <path d="M252 324 h296"/>
+    <!-- collar -->
+    <path d="M344 520 L400 590 L456 520"/>
+    <path d="M400 590 V690"/>
+  </g>
+  <g fill="#F4C64A">
+    <path transform="translate(400,258) scale(1.7)" d="M0-12 3.53-3.71 12.5-3.09 5.6 2.85 7.6 11.6 0 6.9-7.6 11.6-5.6 2.85-12.5-3.09-3.53-3.71Z"/>
+    <path transform="translate(662,150) scale(2.2)" d="M0-12 3.53-3.71 12.5-3.09 5.6 2.85 7.6 11.6 0 6.9-7.6 11.6-5.6 2.85-12.5-3.09-3.53-3.71Z"/>
+  </g>
+</svg>

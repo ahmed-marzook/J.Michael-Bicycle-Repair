@@ -1,0 +1,26 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 600" width="900" height="600" preserveAspectRatio="xMidYMid slice" role="img">
+  <rect width="900" height="600" fill="#0B2A17"/>
+  <g stroke="#86C598" stroke-width="6" fill="none" stroke-linecap="round" stroke-linejoin="round">
+    <!-- chainring -->
+    <circle cx="270" cy="300" r="150" fill="#2E8B4E" fill-opacity="0.25"/>
+    <circle cx="270" cy="300" r="118" stroke-width="3" opacity="0.8"/>
+    <circle cx="270" cy="300" r="26" fill="#2E8B4E" stroke="none"/>
+    <path d="M270 300 L270 180 M270 300 L374 360 M270 300 L166 360"/>
+    <!-- crank arm -->
+    <path d="M270 300 L216 452 M204 452 h30 v34 h-30z"/>
+    <!-- cassette -->
+    <circle cx="690" cy="300" r="92" fill="#2E8B4E" fill-opacity="0.25"/>
+    <circle cx="690" cy="300" r="70" stroke-width="3" opacity="0.8"/>
+    <circle cx="690" cy="300" r="48" stroke-width="3" opacity="0.8"/>
+    <circle cx="690" cy="300" r="18" fill="#2E8B4E" stroke="none"/>
+    <!-- chain runs -->
+    <path d="M270 150 H690 M270 450 L620 372"/>
+    <path d="M270 150 H690" stroke-width="14" opacity="0.25"/>
+    <!-- rear derailleur -->
+    <path d="M690 392 L666 452 M666 452 a26 26 0 1 0 0.1 0 M666 452 L640 500 M640 500 a20 20 0 1 0 0.1 0"/>
+  </g>
+  <g fill="#F4C64A">
+    <path transform="translate(820,110) scale(2.2)" d="M0-12 3.53-3.71 12.5-3.09 5.6 2.85 7.6 11.6 0 6.9-7.6 11.6-5.6 2.85-12.5-3.09-3.53-3.71Z"/>
+    <path transform="translate(84,120) scale(1.7)" d="M0-12 3.53-3.71 12.5-3.09 5.6 2.85 7.6 11.6 0 6.9-7.6 11.6-5.6 2.85-12.5-3.09-3.53-3.71Z"/>
+  </g>
+</svg>

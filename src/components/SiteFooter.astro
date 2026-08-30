@@ -1,0 +1,195 @@
+---
+/**
+ * SiteFooter.astro — docs/DESIGN_SYSTEM.md 4.12.
+ *
+ * brand-900 field, four blocks stacked on mobile and four columns from md.
+ * Every value comes from src/data/business.ts.
+ *
+ * There is no primary WhatsApp button here on mobile: the sticky bar is 60px
+ * away and two green buttons in one viewport is noise. The footer's WhatsApp
+ * entry is a text link in the contact column.
+ *
+ * Footer bottom padding on mobile is handled by the body padding rule in
+ * global.css (design system 4.6), so the footer needs no special case.
+ */
+import Icon from './Icon.astro';
+import Star from '../assets/star.svg';
+import StarRating from './StarRating.astro';
+import { business } from '../data/business';
+import { NAV_ITEMS } from './navigation';
+
+const { identity, contact, address, socials, hours, reviews } = business;
+const year = new Date().getFullYear();
+
+const facebookPages = socials.filter((social) => social.platform === 'facebook');
+const googleListing = socials.find((social) => social.platform === 'google');
+
+/*
+ * The hours field is a discriminated union. Switch on `kind` — never assume a
+ * timetable exists. Opening hours are not known (AGENTS.md section 9).
+ */
+const hoursLine =
+  hours.kind === 'byAppointment'
+    ? hours.message
+    : hours.days
+        .filter((day) => day.status === 'open')
+        .map((day) => day.day)
+        .join(', ');
+---
+
+<footer class="site-footer">
+  {/* Star divider, borrowed from the signage. Decorative. */}
+  <div
+    class="stars-on-dark flex items-center justify-center gap-2 py-5 opacity-90"
+    aria-hidden="true"
+  >
+    {
+      Array.from({ length: 7 }).map(() => (
+        <Star width={12} height={12} focusable="false" />
+      ))
+    }
+  </div>
+
+  <div class="container-page pb-10">
+    <div class="grid gap-10 md:grid-cols-4 md:gap-8">
+      {/* 1. Identity */}
+      <div>
+        <p class="logotype-name text-white">{identity.shortName.toUpperCase()}</p>
+        <p class="footer-meta mt-2">{identity.tradingName}</p>
+        <a
+          class="tap-target mt-4 inline-flex items-center gap-2 text-sm text-brand-100"
+          href={reviews.aggregate.sourceUrl}
+          target="_blank"
+          rel="noopener noreferrer"
+        >
+          <StarRating tone="dark" size={16} />
+          <span aria-hidden="true">
+            {reviews.aggregate.ratingValue.toFixed(1)} from {
+              reviews.aggregate.reviewCount
+            } reviews
+          </span>
+          <span class="sr-only-text">
+            Read the reviews on the {reviews.aggregate.sourceLabel} listing
+            (opens in a new tab)
+          </span>
+        </a>
+      </div>
+
+      {/* 2. Contact */}
+      <div>
+        <h2 class="footer-heading">Contact</h2>
+        <ul class="mt-2">
+          <li>
+            <a
+              class="footer-link gap-2"
+              href={contact.whatsAppHref}
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              <Icon name="whatsapp" size={20} />
+              WhatsApp {identity.ownerFirstName}
+              <span class="sr-only-text">(opens in a new tab)</span>
+            </a>
+          </li>
+          <li>
+            <a class="footer-link gap-2" href={contact.telHref}>
+              <Icon name="phone" size={20} />
+              {contact.phoneDisplay}
+            </a>
+          </li>
+          <li>
+            <a class="footer-link gap-2" href={contact.smsHref}>
+              <Icon name="message" size={20} />
+              Text {contact.phoneDisplay}
+            </a>
+          </li>
+          <li>
+            <a class="footer-link gap-2" href={contact.emailHref}>
+              <Icon name="mail" size={20} />
+              {contact.email}
+            </a>
+          </li>
+          {
+            facebookPages.map((page) => (
+              <li>
+                <a
+                  class="footer-link gap-2"
+                  href={page.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  <Icon name="facebook" size={20} />
+                  {page.label}
+                  <span class="sr-only-text">(opens in a new tab)</span>
+                </a>
+              </li>
+            ))
+          }
+          {
+            googleListing ? (
+              <li>
+                <a
+                  class="footer-link gap-2"
+                  href={googleListing.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  <Icon name="external" size={20} />
+                  {googleListing.label}
+                  <span class="sr-only-text">(opens in a new tab)</span>
+                </a>
+              </li>
+            ) : null
+          }
+        </ul>
+      </div>
+
+      {/* 3. Pages */}
+      <div>
+        <h2 class="footer-heading">Pages</h2>
+        <nav aria-label="Footer">
+          <ul class="mt-2">
+            {
+              NAV_ITEMS.map((item) => (
+                <li>
+                  <a class="footer-link" href={item.href}>
+                    {item.label}
+                  </a>
+                </li>
+              ))
+            }
+          </ul>
+        </nav>
+      </div>
+
+      {/* 4. Find us */}
+      <div>
+        <h2 class="footer-heading">Find us</h2>
+        <address class="footer-meta mt-3 not-italic">
+          {address.street}<br />
+          {address.dependentLocality}<br />
+          {address.locality}<br />
+          {address.region} {address.postcode}
+        </address>
+        <a
+          class="footer-link gap-2"
+          href={address.directionsUrl}
+          target="_blank"
+          rel="noopener noreferrer"
+        >
+          <Icon name="directions" size={20} />
+          Get directions
+          <span class="sr-only-text">
+            to {address.formatted} (opens in a new tab)
+          </span>
+        </a>
+      </div>
+    </div>
+
+    <hr class="mt-8 border-0 border-t" style="border-color: rgb(255 255 255 / 0.12)" />
+
+    <p class="footer-meta mt-6">
+      &copy; {year} {identity.legalName} &middot; {hoursLine}
+    </p>
+  </div>
+</footer>

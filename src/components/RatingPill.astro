@@ -1,0 +1,47 @@
+---
+/**
+ * RatingPill.astro — the signature treatment from docs/DESIGN_SYSTEM.md 4.10:
+ * gold stars on a brand-900 pill (9.59:1), reading
+ * "5.0 from 85 Google reviews", linking out to the real Google listing.
+ *
+ * Every number and the destination URL come from src/data/business.ts.
+ */
+import StarRating from './StarRating.astro';
+import { business } from '../data/business';
+
+interface Props {
+  size?: number;
+  /** Render as a link to the Google listing. */
+  link?: boolean;
+  class?: string;
+}
+
+const { size = 20, link = true, class: className } = Astro.props;
+
+const { aggregate } = business.reviews;
+const text = `${aggregate.ratingValue.toFixed(1)} from ${aggregate.reviewCount} ${aggregate.sourceLabel} reviews`;
+const classes = ['rating-pill', className].filter(Boolean).join(' ');
+---
+
+{
+  link ? (
+    <a
+      class={classes}
+      href={aggregate.sourceUrl}
+      target="_blank"
+      rel="noopener noreferrer"
+    >
+      <StarRating tone="dark" size={size} />
+      <span aria-hidden="true">{text}</span>
+      <span class="sr-only-text">
+        Read the reviews on the {aggregate.sourceLabel} listing (opens in a new
+        tab)
+      </span>
+    </a>
+  ) : (
+    <span class={classes}>
+      <StarRating tone="dark" size={size} />
+      <span aria-hidden="true">{text}</span>
+    </span>
+  )
+}

@@ -1,0 +1,123 @@
+---
+/**
+ * /services/ — docs/DESIGN_SYSTEM.md 5.2.
+ *
+ * All thirteen services from the Google Business listing, then the client's own
+ * 13-point servicing plan, the parts caveat, and the "outside the plan" quote
+ * prompt. No price is invented anywhere: anything outside the plan goes to
+ * WhatsApp for a quote.
+ */
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import Button from '../../components/Button.astro';
+import WhatsAppButton from '../../components/WhatsAppButton.astro';
+import SectionHeading from '../../components/SectionHeading.astro';
+import ServiceCard from '../../components/ServiceCard.astro';
+import ServicingPlanSteps from '../../components/ServicingPlanSteps.astro';
+import PartsCaveat from '../../components/PartsCaveat.astro';
+import CtaBand from '../../components/CtaBand.astro';
+import Icon from '../../components/Icon.astro';
+
+// TODO(client): replace with a real photograph of a wheel being trued in the jig.
+import ServiceWheel from '../../assets/service-wheel.svg';
+// TODO(client): replace with a real close-up photograph of a cleaned and
+// adjusted drivetrain.
+import ServiceDrivetrain from '../../assets/service-drivetrain.svg';
+
+import { business } from '../../data/business';
+
+const { identity, address, services, servicingPlan, pricing } = business;
+
+const description = `Bicycle repairs and servicing in Bletchley, Milton Keynes: brakes, gears, wheels, bearings, suspension and custom builds. Every service follows the full ${servicingPlan.points.length}-point plan.`;
+---
+
+<BaseLayout title="Bicycle repairs and servicing" description={description}>
+  {/* 2. Page intro ------------------------------------------------------- */}
+  <section class="section">
+    <div class="container-page">
+      <span class="eyebrow mb-3">Services</span>
+      <h1>Bicycle repairs and servicing in Bletchley</h1>
+      <p class="lead mt-4 md:mt-5">
+        Everything below is done in the workshop on {address.streetName} in {
+          address.dependentLocality
+        }, by {identity.ownerFirstName}. If your bike needs something that is
+        not on the list, message him and ask.
+      </p>
+
+      <div class="mt-8 flex flex-col gap-3 sm:flex-row sm:items-center">
+        <WhatsAppButton block class="sm:w-auto" />
+        <Button href="/pricing/" variant="secondary" block class="sm:w-auto">
+          See prices
+        </Button>
+      </div>
+    </div>
+  </section>
+
+  {/* 3. Every service ----------------------------------------------------- */}
+  <section class="section bg-surface-subtle">
+    <div class="container-page">
+      <SectionHeading
+        eyebrow="The full list"
+        heading={`What ${identity.ownerFirstName} fixes`}
+        lead="Thirteen services, exactly as they appear on the Google Business listing."
+      />
+
+      <ul class="mt-8 grid gap-4 sm:grid-cols-2 md:mt-10 md:grid-cols-3 md:gap-6">
+        {services.map((service) => <ServiceCard service={service} />)}
+      </ul>
+    </div>
+  </section>
+
+  {/* 4. The servicing plan -------------------------------------------------- */}
+  <section class="section" id="servicing-plan">
+    <div class="container-page">
+      <SectionHeading
+        starRule
+        eyebrow="Every bike, every time"
+        heading={servicingPlan.title}
+        lead={pricing.includesNote}
+      />
+
+      <div class="mt-8 grid gap-4 sm:grid-cols-2 md:mt-10 md:gap-6">
+        <div class="illustration">
+          <ServiceWheel
+            role="img"
+            aria-label="A bicycle wheel being trued in a truing stand"
+          />
+        </div>
+        <div class="illustration">
+          <ServiceDrivetrain
+            role="img"
+            aria-label="A cleaned and adjusted bicycle drivetrain"
+          />
+        </div>
+      </div>
+
+      <ServicingPlanSteps variant="numbered" class="mt-8 md:mt-10" />
+
+      {/* 5. Parts caveat */}
+      <PartsCaveat class="mt-6" />
+    </div>
+  </section>
+
+  {/* 6. Outside the plan ---------------------------------------------------- */}
+  <section class="section bg-surface-subtle">
+    <div class="container-page">
+      <SectionHeading
+        eyebrow="Outside the plan"
+        heading="Punctures, wheel builds and custom builds"
+        lead={pricing.customQuoteNote}
+      />
+
+      <div class="mt-8 flex flex-col gap-3 sm:flex-row sm:items-center">
+        <WhatsAppButton block label="Get a price on WhatsApp" class="sm:w-auto" />
+        <p class="flex items-center gap-2 text-sm text-muted">
+          <Icon name="check" size={20} class="shrink-0 text-brand-600" />
+          No obligation, and no invented prices — you get a real quote for your
+          bike.
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <CtaBand ctaLabel="Get a price on WhatsApp" />
+</BaseLayout>

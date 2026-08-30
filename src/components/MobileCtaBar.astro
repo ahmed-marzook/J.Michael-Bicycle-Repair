@@ -1,0 +1,22 @@
+---
+/**
+ * MobileCtaBar.astro — docs/DESIGN_SYSTEM.md 4.6.
+ *
+ * The last child of <body>, AFTER <footer>. Fixed to the bottom below md only;
+ * desktop has the header button instead.
+ *
+ * It never covers content: `body` reserves --mobile-cta-h in global.css.
+ * It never traps focus: one link, last in the DOM, no inert, no aria-modal, no
+ * tabindex juggling, no listeners.
+ * It does not hide on scroll and does not animate in — that would need an
+ * IntersectionObserver, and it would make the primary CTA intermittent.
+ * It carries no landmark role: it is a single link.
+ * It is shown on /contact/ too. Duplicating the CTA is acceptable; missing it
+ * is not.
+ */
+import WhatsAppButton from './WhatsAppButton.astro';
+---
+
+<div class="mobile-cta md:hidden">
+  <WhatsAppButton block />
+</div>

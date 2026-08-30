@@ -1,0 +1,73 @@
+---
+/**
+ * /404 — docs/DESIGN_SYSTEM.md 5.6.
+ *
+ * Centred, max 560px, the chain illustration capped at 200px, a friendly
+ * heading, both CTAs, and a list of the five real pages so the page is useful
+ * rather than merely apologetic. No dark CTA band.
+ *
+ * This is the only page that may use --color-danger, and only as a 4px rule
+ * under the illustration.
+ */
+import BaseLayout from '../layouts/BaseLayout.astro';
+import Button from '../components/Button.astro';
+import WhatsAppButton from '../components/WhatsAppButton.astro';
+import Icon from '../components/Icon.astro';
+
+// This one stays an illustration — there is no photograph to replace it with.
+import ChainOff from '../assets/404-chain.svg';
+
+import { NAV_ITEMS } from '../components/navigation';
+import { business } from '../data/business';
+
+const { identity } = business;
+---
+
+<BaseLayout
+  title="Page not found"
+  description={`That page is not here. Repairs and servicing by ${identity.legalName} in Bletchley, Milton Keynes.`}
+  noindex
+>
+  <section class="section">
+    <div class="container-page">
+      <div class="mx-auto flex max-w-narrow flex-col items-center text-center">
+        <div class="w-full max-w-50">
+          <ChainOff
+            role="img"
+            aria-label="Illustration of a bicycle chain that has come off its chainring"
+            class="h-auto w-full rounded-xl"
+          />
+        </div>
+        <hr class="mt-6 w-16 border-0 border-t-4 border-danger" />
+
+        <h1 class="mt-6">That page has slipped its chain</h1>
+        <p class="lead mt-4">
+          The page you wanted is not here, but {identity.ownerFirstName} still
+          is.
+        </p>
+
+        <div class="mt-8 flex w-full flex-col gap-3 sm:w-auto sm:flex-row sm:items-center">
+          <WhatsAppButton block class="sm:w-auto" />
+          <Button href="/" variant="secondary" block class="sm:w-auto">
+            Back to the home page
+          </Button>
+        </div>
+
+        <nav class="mt-10 w-full" aria-label="All pages">
+          <ul class="grid gap-1">
+            {
+              NAV_ITEMS.map((item) => (
+                <li class="flex justify-center">
+                  <a class="link-standalone" href={item.href}>
+                    {item.label}
+                    <Icon name="chevronRight" size={16} />
+                  </a>
+                </li>
+              ))
+            }
+          </ul>
+        </nav>
+      </div>
+    </div>
+  </section>
+</BaseLayout>

@@ -1,0 +1,49 @@
+---
+/**
+ * StarRating.astro — docs/DESIGN_SYSTEM.md 4.10.
+ *
+ * Five filled five-pointed stars matching the sign's bullet stars. There are no
+ * half or empty stars anywhere on this site because the rating is 5.0.
+ *
+ * The star group is aria-hidden and is preceded by a visually hidden sentence,
+ * so a screen reader hears the rating once, as prose, and never "star star
+ * star star star".
+ */
+import Star from '../assets/star.svg';
+import { business } from '../data/business';
+
+interface Props {
+  /** 'light' = accent-500 on a light surface. 'dark' = accent-300 on brand-900. */
+  tone?: 'light' | 'dark';
+  size?: number;
+  /**
+   * Emit the visually hidden sentence. Set false only where the surrounding
+   * text already states the rating in full.
+   */
+  labelled?: boolean;
+  class?: string;
+}
+
+const { tone = 'light', size = 20, labelled = true, class: className } = Astro.props;
+
+const { aggregate } = business.reviews;
+const stars = Math.round(aggregate.ratingValue);
+const label = `Rated ${aggregate.ratingValue.toFixed(1)} out of ${aggregate.bestRating} from ${aggregate.reviewCount} ${aggregate.sourceLabel} reviews`;
+
+const classes = [
+  'inline-flex items-center gap-1',
+  tone === 'dark' ? 'stars-on-dark' : 'stars-on-light',
+  className,
+]
+  .filter(Boolean)
+  .join(' ');
+---
+
+{labelled ? <span class="sr-only-text">{label}</span> : null}
+<span class={classes} aria-hidden="true">
+  {
+    Array.from({ length: stars }).map(() => (
+      <Star width={size} height={size} focusable="false" />
+    ))
+  }
+</span>

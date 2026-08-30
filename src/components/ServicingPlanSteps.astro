@@ -1,0 +1,61 @@
+---
+/**
+ * ServicingPlanSteps.astro — the 13-point plan.
+ *
+ * Two presentations, per docs/DESIGN_SYSTEM.md 5.2 step 4 and 5.3 step 5:
+ *
+ *   'numbered' — /services/. Each step is a row on `surface` with a 1px border
+ *     and a display-face step number in a 40x40 brand-50 square. Two columns
+ *     from md with the default grid-auto-flow, so the steps read 1 2 / 3 4 and
+ *     visual order matches DOM order.
+ *   'compact' — /pricing/. Gold star bullets, `sm` text, two columns from md.
+ *
+ * Both read the points from src/data/business.ts, in the client's own wording.
+ */
+import Star from '../assets/star.svg';
+import { business } from '../data/business';
+
+interface Props {
+  variant?: 'numbered' | 'compact';
+  class?: string;
+}
+
+const { variant = 'numbered', class: className } = Astro.props;
+const { points } = business.servicingPlan;
+---
+
+{
+  variant === 'numbered' ? (
+    <ol class:list={['grid gap-4 md:grid-cols-2 md:gap-6', className]}>
+      {points.map((point, index) => (
+        <li class="card flex items-start gap-4">
+          <span
+            class="icon-tile font-display text-h4 font-semibold"
+            aria-hidden="true"
+          >
+            {index + 1}
+          </span>
+          <p>
+            <span class="sr-only-text">Step {index + 1} of {points.length}.</span>
+            {point}
+          </p>
+        </li>
+      ))}
+    </ol>
+  ) : (
+    <ol class:list={['star-list grid gap-3 text-sm md:grid-cols-2 md:gap-x-6', className]}>
+      {points.map((point) => (
+        <li>
+          <Star
+            width={16}
+            height={16}
+            focusable="false"
+            aria-hidden="true"
+            class="stars-on-light mt-1 shrink-0"
+          />
+          <span>{point}</span>
+        </li>
+      ))}
+    </ol>
+  )
+}

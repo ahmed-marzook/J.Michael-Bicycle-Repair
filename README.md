@@ -2,7 +2,7 @@
 
 Static marketing website for **Bletchley Bicycle Repairs, Servicing & Sales by
 J.Michael & Co** — a bicycle repair workshop in Fenny Stratford, Bletchley,
-Milton Keynes. Built with Astro 5, Tailwind CSS 4 and TypeScript in strict mode.
+Milton Keynes. Built with Astro 7, Tailwind CSS 4 and TypeScript in strict mode.
 
 All client facts (contact details, address, services, the servicing plan,
 prices, reviews) live in one typed module, `src/data/business.ts`. Nothing else

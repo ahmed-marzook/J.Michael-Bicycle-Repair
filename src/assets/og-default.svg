@@ -1,0 +1,45 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 630" width="1200" height="630" role="img">
+  <!--
+    Source artwork for the Open Graph card. Rasterised to a real 1200x630 PNG
+    at build time by getImage() in BaseLayout.astro (design system 6.3):
+    Facebook and WhatsApp do not render an SVG og:image.
+
+    No live text, by design system 6.1 and for a hard technical reason: the
+    rasteriser has no access to the Oswald webfont, so any <text> here would
+    silently fall back to a system face or vanish. The identity is carried by
+    the monogram, which is drawn as paths.
+  -->
+  <rect width="1200" height="630" fill="#0B2A17"/>
+  <rect x="0" y="0" width="1200" height="630" fill="#2C3719" opacity="0.35"/>
+
+  <!-- workshop wheel motif, right -->
+  <g stroke="#86C598" fill="none" stroke-linecap="round">
+    <circle cx="930" cy="300" r="238" stroke-width="10"/>
+    <circle cx="930" cy="300" r="214" stroke-width="4" opacity="0.7"/>
+    <g stroke-width="4" opacity="0.75">
+      <path d="M930 62 V538 M692 300 H1168 M762 132 L1098 468 M1098 132 L762 468 M840 74 L1020 526 M1020 74 L840 526 M704 210 L1156 390 M1156 210 L704 390"/>
+    </g>
+    <circle cx="930" cy="300" r="34" fill="#2E8B4E" stroke="none"/>
+  </g>
+
+  <!-- brand mark, left -->
+  <g transform="translate(88,120) scale(0.586)">
+    <rect width="512" height="512" rx="96" fill="#0B2A17" stroke="#86C598" stroke-width="8"/>
+    <g transform="translate(18,27)" fill="#F4C64A">
+      <path d="M150 140 H184 V268 C184 296 162 318 134 318 H112 V284 H134 C143 284 150 277 150 268 Z"/>
+      <path d="M224 318 V140 H262 L294 232 L326 140 H364 V318 H330 V214 L308 272 H280 L258 214 V318 Z"/>
+    </g>
+    <path transform="translate(312,197) scale(1.6)" d="M0-12 3.53-3.71 12.5-3.09 5.6 2.85 7.6 11.6 0 6.9-7.6 11.6-5.6 2.85-12.5-3.09-3.53-3.71Z" fill="#F4C64A"/>
+  </g>
+
+  <!-- five stars, matching the signage -->
+  <g fill="#F4C64A">
+    <path transform="translate(112,510) scale(1.9)" d="M0-12 3.53-3.71 12.5-3.09 5.6 2.85 7.6 11.6 0 6.9-7.6 11.6-5.6 2.85-12.5-3.09-3.53-3.71Z"/>
+    <path transform="translate(176,510) scale(1.9)" d="M0-12 3.53-3.71 12.5-3.09 5.6 2.85 7.6 11.6 0 6.9-7.6 11.6-5.6 2.85-12.5-3.09-3.53-3.71Z"/>
+    <path transform="translate(240,510) scale(1.9)" d="M0-12 3.53-3.71 12.5-3.09 5.6 2.85 7.6 11.6 0 6.9-7.6 11.6-5.6 2.85-12.5-3.09-3.53-3.71Z"/>
+    <path transform="translate(304,510) scale(1.9)" d="M0-12 3.53-3.71 12.5-3.09 5.6 2.85 7.6 11.6 0 6.9-7.6 11.6-5.6 2.85-12.5-3.09-3.53-3.71Z"/>
+    <path transform="translate(368,510) scale(1.9)" d="M0-12 3.53-3.71 12.5-3.09 5.6 2.85 7.6 11.6 0 6.9-7.6 11.6-5.6 2.85-12.5-3.09-3.53-3.71Z"/>
+  </g>
+
+  <rect x="0" y="606" width="1200" height="24" fill="#E0A81F"/>
+</svg>

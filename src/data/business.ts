@@ -27,6 +27,13 @@ export interface BusinessIdentity {
   readonly tradingName: string;
   /** Short form for nav bars, footers and the browser tab. */
   readonly shortName: string;
+  /**
+   * The name written out for screen readers and image alt text, where "&"
+   * reads badly. Same business, spoken form.
+   */
+  readonly spokenName: string;
+  /** The second line of the logotype in the header. */
+  readonly logotypeStrapline: string;
   /** The owner's name as customers know him. */
   readonly ownerFirstName: string;
   /** One line, <= ~155 chars — safe for a meta description or an OG subtitle. */
@@ -68,6 +75,13 @@ export interface BusinessContact {
 export interface BusinessAddress {
   /** Unit and street, as one line. */
   readonly street: string;
+  /**
+   * Just the street, with no unit or number. Prose and section headings use
+   * this so "Tavistock Street" is never typed into a template.
+   */
+  readonly streetName: string;
+  /** The outward code, e.g. the "MK2" people actually search for. */
+  readonly outwardCode: string;
   /**
    * The neighbourhood within the post town. Kept separate from `locality` so
    * "Fenny Stratford" can be used as a local-SEO keyword on its own.
@@ -198,6 +212,17 @@ export interface PricingTier {
   readonly eligibility: string;
   /** True for the tier most customers fall into (the adult bike). */
   readonly isMostCommon: boolean;
+  /** Card eyebrow. A category, not a claim. */
+  readonly category: string;
+  /** Card heading: the kind of bike this tier covers. */
+  readonly heading: string;
+  /** Card sub-line: `eligibility` restated as a short phrase. */
+  readonly summary: string;
+  /**
+   * Factual category badge on the emphasised card. Never "Most popular" or
+   * "Best value" — the brief supports neither claim (AGENTS.md 2.1).
+   */
+  readonly badge?: string;
 }
 
 export interface Pricing {
@@ -208,6 +233,14 @@ export interface Pricing {
   readonly customQuoteNote: string;
   /** Human-readable span of the published prices, e.g. for `priceRange`. */
   readonly priceRange: string;
+  /**
+   * The one factual line shown directly above the pricing grid, so a phone
+   * visitor sees the number that applies to most of them at once. Composed
+   * from the adult tier below, never typed twice.
+   */
+  readonly headlineStatement: string;
+  /** The two plan highlights repeated on every pricing card. */
+  readonly cardHighlights: readonly string[];
 }
 
 /* ===========================================================================
@@ -264,6 +297,29 @@ export interface Reviews {
 }
 
 /* ===========================================================================
+ * About-page copy
+ *
+ * Prose, not visual language — docs/DESIGN_SYSTEM.md explicitly parks the
+ * About story text here rather than in markup. Every sentence below is written
+ * from a fact in docs/PROJECT_BRIEF.md. Nothing claims a qualification, a
+ * number of years in the trade, or a biography the brief does not contain.
+ * ======================================================================== */
+
+export interface AboutContent {
+  /** One lead sentence under the h1. */
+  readonly lead: string;
+  /** The story, as paragraphs. */
+  readonly story: readonly string[];
+  /** "Why local matters" block. */
+  readonly whyLocal: readonly string[];
+  /**
+   * Credentials. FACTS ONLY. Anything unknown stays out of this array and
+   * stays a TODO(client) below, rather than being filled with a guess.
+   */
+  readonly credentials: readonly string[];
+}
+
+/* ===========================================================================
  * The whole business
  * ======================================================================== */
 
@@ -277,6 +333,7 @@ export interface Business {
   readonly servicingPlan: ServicingPlan;
   readonly pricing: Pricing;
   readonly reviews: Reviews;
+  readonly about: AboutContent;
 }
 
 /* ===========================================================================
@@ -286,12 +343,26 @@ export interface Business {
 /** E.164 form, used to derive every contact link below. Verified: 07399 351272. */
 const PHONE_E164 = '+447399351272';
 
+/**
+ * The three published prices, in ascending order — the order they appear on the
+ * client's own price card, and the order they must appear in on the site.
+ * Declared once here so the numeral is written exactly once in this repository.
+ */
+const PRICE_JUNIOR_SINGLE_SPEED = 40;
+const PRICE_JUNIOR_GEARED = 45;
+const PRICE_ADULT = 50;
+
+/** Formats a whole-pound GBP amount for display. */
+const gbp = (amount: number): string => `£${amount}`;
+
 export const business: Business = {
   identity: {
     legalName: 'J.Michael & Co',
     tradingName:
       'Bletchley Bicycle Repairs, Servicing & Sales by J.Michael & Co',
     shortName: 'J.Michael & Co',
+    spokenName: 'J.Michael and Co',
+    logotypeStrapline: 'Bletchley Bicycle Repairs',
     ownerFirstName: 'Jimmy',
     shortDescription:
       'Bicycle repairs, servicing and sales in Bletchley, Milton Keynes. Rated 5.0 from 85 Google reviews.',
@@ -316,6 +387,8 @@ export const business: Business = {
 
   address: {
     street: 'Unit 1, 75 Tavistock Street',
+    streetName: 'Tavistock Street',
+    outwardCode: 'MK2',
     dependentLocality: 'Fenny Stratford',
     locality: 'Bletchley',
     region: 'Milton Keynes',
@@ -472,42 +545,62 @@ export const business: Business = {
   },
 
   pricing: {
+    // ASCENDING ORDER IS LOAD-BEARING. This array order is the DOM order and
+    // the visual order at every breakpoint (docs/DESIGN_SYSTEM.md 4.8).
     tiers: [
       {
         id: 'junior-single-speed',
         name: 'Junior — single speed',
-        amount: 40,
+        amount: PRICE_JUNIOR_SINGLE_SPEED,
         currency: 'GBP',
-        displayPrice: '£40',
+        displayPrice: gbp(PRICE_JUNIOR_SINGLE_SPEED),
         eligibility:
           'Junior bike up to 20" wheel size, single speed — no gears',
         isMostCommon: false,
+        category: 'Junior',
+        heading: 'Junior bike, single speed',
+        summary: 'up to 20" wheel size, no gears',
       },
       {
         id: 'junior-geared',
         name: 'Junior — geared',
-        amount: 45,
+        amount: PRICE_JUNIOR_GEARED,
         currency: 'GBP',
-        displayPrice: '£45',
+        displayPrice: gbp(PRICE_JUNIOR_GEARED),
         eligibility: 'Junior bike up to 24" with up to one set of gears',
         isMostCommon: false,
+        category: 'Junior',
+        heading: 'Junior bike with gears',
+        summary: 'up to 24" wheel size, up to one set of gears',
       },
       {
         id: 'adult',
         name: 'Adult',
-        amount: 50,
+        amount: PRICE_ADULT,
         currency: 'GBP',
-        displayPrice: '£50',
+        displayPrice: gbp(PRICE_ADULT),
         eligibility: 'Adult bike with up to two sets of gears',
-        // The tier most customers fall into.
+        // The tier most customers fall into, and the only adult tier. This is
+        // why it is the emphasised card. It is NOT a popularity claim.
         isMostCommon: true,
+        category: 'Adult',
+        heading: 'Adult bike',
+        summary: 'up to two sets of gears',
+        badge: 'Adult bikes',
       },
     ],
     includesNote:
       'Every price includes the full servicing plan — all 13 points, on every bike.',
     customQuoteNote:
       'Repairs outside the servicing plan — punctures, wheel builds, custom builds — are quoted individually. Message Jimmy on WhatsApp for a quote.',
-    priceRange: '£40–£50',
+    priceRange: `${gbp(PRICE_JUNIOR_SINGLE_SPEED)}–${gbp(PRICE_ADULT)}`,
+    headlineStatement: `Adult bikes with up to two sets of gears are ${gbp(PRICE_ADULT)}.`,
+    // Both lines are condensed from the servicing plan above (points 1–11 and
+    // point 12). They are summaries of the client's own wording, not new claims.
+    cardHighlights: [
+      'The full 13-point servicing plan',
+      'Test ride, finishing touches and final checks',
+    ],
   },
 
   reviews: {
@@ -561,6 +654,32 @@ export const business: Business = {
         attribution: 'J. (Bletchley)',
         rating: 5,
       },
+    ],
+  },
+
+  // TODO(client): the two things this page would most like and does not have
+  // are (a) Jimmy's exact qualifications and (b) how long he has been in the
+  // trade. Both are on the open-questions list in AGENTS.md section 9. They are
+  // deliberately ABSENT from `credentials` below rather than guessed at; when
+  // the client answers, add them as new entries and the About page will render
+  // them with no template change.
+  about: {
+    lead: 'J.Michael & Co is Jimmy. One mechanic, one workbench in Fenny Stratford, and the same thorough service on every bike that comes through the door.',
+    story: [
+      'Bletchley Bicycle Repairs, Servicing & Sales by J.Michael & Co is a one-man workshop on Tavistock Street in Fenny Stratford. There is no service desk and no rota of mechanics: Jimmy takes the booking, does the work, and hands the bike back himself.',
+      'That is the whole reason the standard holds. Every bike gets the same servicing plan — the same 13 points, in the same order — whether it is a child’s first bike with 20 inch wheels or a geared adult commuter. Nothing is skipped because the bike was cheap, and nothing is added to the bill because it was not.',
+      'It also keeps the arrangements simple. Phone, text or WhatsApp anytime and you are talking to the person who will actually be working on your bike, so you get a straight answer about what it needs and what it will cost before you commit to anything.',
+    ],
+    whyLocal: [
+      'Bletchley, Fenny Stratford and the rest of Milton Keynes are full of bikes that need an hour of proper attention rather than a new part: a brake that has never really bitten, gears that have skipped since the day the bike was bought, bearings that have never once been adjusted. Caught early those are small jobs. Left alone they wear out the expensive components around them.',
+      'A workshop you can walk or drive to in a few minutes is also a workshop that has to get it right. Jimmy sees the same customers again, and the rating on the Google listing is what that accountability looks like written down.',
+      'If getting the bike into the car is the awkward part, say so when you get in touch. Help loading and unloading is part of the service, not a favour.',
+    ],
+    credentials: [
+      'Every bike is serviced by Jimmy himself — one mechanic, one standard.',
+      'The full 13-point servicing plan is carried out on every bike, at every price tier.',
+      'Repairs, servicing and sales, including custom builds, wheel work and suspension.',
+      'Appointments arranged directly by phone, text or WhatsApp — no booking system in between.',
     ],
   },
 };

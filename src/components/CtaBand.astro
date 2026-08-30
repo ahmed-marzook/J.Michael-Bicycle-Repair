@@ -1,0 +1,57 @@
+---
+/**
+ * CtaBand.astro — the final dark band, docs/DESIGN_SYSTEM.md 5.1 section 9.
+ *
+ * brand-900, centred, max 640px, stacked full-width buttons on mobile and
+ * inline from sm, plus the gold rating pill. Two dark surfaces per page
+ * maximum — this one and the footer — so dark stays an emphasis, not a theme.
+ *
+ * Deliberately NOT rendered on /contact/: that whole page is the CTA, and a
+ * band there would put a third green button in one viewport (5.5).
+ */
+import Button from './Button.astro';
+import WhatsAppButton from './WhatsAppButton.astro';
+import RatingPill from './RatingPill.astro';
+import { business } from '../data/business';
+
+interface Props {
+  heading?: string;
+  body?: string;
+  /** Override the WhatsApp label, e.g. "Get a price on WhatsApp". */
+  ctaLabel?: string;
+}
+
+const {
+  heading = `Message ${business.identity.ownerFirstName} about your bike`,
+  body = business.contact.contactNote,
+  ctaLabel,
+} = Astro.props;
+---
+
+<section class="band-dark">
+  <div class="container-page">
+    <div class="mx-auto flex max-w-cta flex-col items-center text-center">
+      <h2>{heading}</h2>
+      <p class="lead mt-4 text-brand-100">{body}</p>
+
+      <div class="mt-8 flex w-full flex-col gap-3 sm:w-auto sm:flex-row sm:items-center">
+        <WhatsAppButton block label={ctaLabel} class="sm:w-auto" />
+        <Button
+          href={business.contact.telHref}
+          variant="secondary"
+          icon="phone"
+          onDark
+          block
+          class="sm:w-auto"
+          aria-label={`Call ${business.identity.ownerFirstName} on ${business.contact.phoneDisplay}`}
+        >
+          Call {business.contact.phoneDisplay}
+        </Button>
+      </div>
+
+      <div class="mt-8">
+        <RatingPill />
+      </div>
+    </div>
+  </div>
+</section>

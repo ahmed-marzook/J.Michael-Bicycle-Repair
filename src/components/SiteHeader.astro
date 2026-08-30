@@ -1,0 +1,104 @@
+---
+/**
+ * SiteHeader.astro — docs/DESIGN_SYSTEM.md 4.4 and 4.5.
+ *
+ * Sticky, solid white, 1px bottom border, shadow-1 applied unconditionally
+ * (scroll detection would need JS, and this site has none).
+ *
+ * The mobile nav is a native <details> disclosure: no script, no focus trap, no
+ * aria-expanded to keep in sync, and it works with JavaScript disabled because
+ * there is no JavaScript. The <details> is a full-width in-flow block placed
+ * after the header bar, so the panel it opens PUSHES the page down instead of
+ * covering it; only the 44x44 <summary> is positioned into the bar.
+ *
+ * The desktop <nav> and the mobile <details> are two separate DOM blocks with
+ * distinct aria-labels, exactly one visible at any width, so a duplicated
+ * landmark name is never announced.
+ */
+import Icon from './Icon.astro';
+import WhatsAppButton from './WhatsAppButton.astro';
+import { business } from '../data/business';
+import { NAV_ITEMS, isCurrentRoute } from './navigation';
+
+const pathname = Astro.url.pathname;
+const isHome = isCurrentRoute('/', pathname);
+const logotypeName = business.identity.shortName.toUpperCase();
+---
+
+<header class="site-header">
+  <div class="container-page">
+    <div class="header-bar">
+      {/* The logotype is a link everywhere except home. It is never the h1. */}
+      {
+        isHome ? (
+          <span class="logotype">
+            <span class="logotype-name">{logotypeName}</span>
+            <span class="logotype-strap">{business.identity.logotypeStrapline}</span>
+          </span>
+        ) : (
+          <a class="logotype" href="/">
+            <span class="logotype-name">{logotypeName}</span>
+            <span class="logotype-strap">{business.identity.logotypeStrapline}</span>
+          </a>
+        )
+      }
+
+      <div class="hidden items-center gap-6 md:flex">
+        <nav aria-label="Primary">
+          <ul class="flex items-center gap-6">
+            {
+              NAV_ITEMS.map((item) => (
+                <li>
+                  <a
+                    class="nav-link"
+                    href={item.href}
+                    aria-current={
+                      isCurrentRoute(item.href, pathname) ? 'page' : undefined
+                    }
+                  >
+                    {item.label}
+                  </a>
+                </li>
+              ))
+            }
+          </ul>
+        </nav>
+        {/* Desktop has no sticky bottom bar, so the CTA lives here instead. */}
+        <WhatsAppButton compact />
+      </div>
+    </div>
+  </div>
+
+  <details class="nav-disclosure md:hidden">
+    <summary aria-label="Menu">
+      <Icon name="menu" size={24} class="icon-open" />
+      <Icon name="close" size={24} class="icon-close" />
+    </summary>
+    <nav class="nav-panel" aria-label="Primary mobile">
+      <ul>
+        {
+          NAV_ITEMS.map((item) => (
+            <li>
+              <a
+                href={item.href}
+                aria-current={
+                  isCurrentRoute(item.href, pathname) ? 'page' : undefined
+                }
+              >
+                {item.label}
+              </a>
+            </li>
+          ))
+        }
+        <li>
+          <a
+            href={business.contact.telHref}
+            aria-label={`Call ${business.identity.ownerFirstName} on ${business.contact.phoneDisplay}`}
+          >
+            Call {business.contact.phoneDisplay}
+          </a>
+        </li>
+      </ul>
+    </nav>
+  </details>
+</header>
