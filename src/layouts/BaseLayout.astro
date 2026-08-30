@@ -1,0 +1,47 @@
+---
+/**
+ * BaseLayout.astro — SCAFFOLD ONLY.
+ *
+ * The minimum HTML shell needed to prove the toolchain builds end to end:
+ * document skeleton, charset, viewport, the Tailwind entry point, head tags via
+ * astro-seo, the LocalBusiness JSON-LD, and a slot.
+ *
+ * Deliberately unstyled and unopinionated. The implementation agent replaces
+ * this with the real shell (skip link, header, nav, footer, OG image, per-page
+ * SEO props) per docs/DESIGN_SYSTEM.md.
+ */
+import { SEO } from 'astro-seo';
+import '../styles/global.css';
+import { business } from '../data/business';
+import {
+  buildLocalBusinessJsonLd,
+  serialiseJsonLd,
+} from '../lib/structured-data';
+
+interface Props {
+  title: string;
+  description?: string;
+}
+
+const { title, description = business.identity.shortDescription } = Astro.props;
+
+// Astro.site comes from `site` in astro.config.mjs — still a placeholder.
+const canonicalUrl = new URL(Astro.url.pathname, Astro.site ?? Astro.url).href;
+
+const jsonLd = serialiseJsonLd(
+  buildLocalBusinessJsonLd({ siteUrl: Astro.site }),
+);
+---
+
+<!doctype html>
+<html lang="en-GB">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <SEO title={title} description={description} canonical={canonicalUrl} />
+    <script type="application/ld+json" is:inline set:html={jsonLd} />
+  </head>
+  <body>
+    <slot />
+  </body>
+</html>

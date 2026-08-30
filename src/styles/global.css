@@ -1,0 +1,21 @@
+/*
+ * Tailwind CSS v4 entry point.
+ * Imported once, from src/layouts/BaseLayout.astro.
+ */
+@import "tailwindcss";
+
+/*
+ * ---------------------------------------------------------------------------
+ * DESIGN TOKENS — owned by the design agent (docs/DESIGN_SYSTEM.md).
+ * ---------------------------------------------------------------------------
+ * This block is intentionally EMPTY. The scaffold makes no visual decisions:
+ * no colours, no fonts, no spacing, no radii are invented here.
+ *
+ * Drop the tokens from docs/DESIGN_SYSTEM.md in below using Tailwind v4's
+ * @theme syntax, e.g. `--color-brand-600: <value>;` or `--font-sans: <stack>;`.
+ * Each namespace prefix (--color-*, --font-*, --text-*, --spacing-*, ...)
+ * generates the matching utility classes automatically.
+ * ---------------------------------------------------------------------------
+ */
+@theme {
+}
