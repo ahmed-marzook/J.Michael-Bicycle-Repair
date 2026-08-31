@@ -994,6 +994,55 @@
   }
 
 
+
+  /* ---- Site-wide announcement banner ----------------------------------- */
+
+  /*
+   * Deep green ground with the gold accent, so it reads as "note from the
+   * workshop" rather than a browser error. White on brand-900 is 14.61:1.
+   */
+  .announcement-banner {
+    background-color: var(--color-brand-900);
+    color: var(--color-white);
+    border-bottom: 3px solid var(--color-accent-400);
+    font-size: var(--text-sm);
+  }
+
+  .announcement-banner__inner {
+    max-width: 72rem;
+    margin: 0 auto;
+    padding: 10px 20px;
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    line-height: 1.5;
+  }
+
+  .announcement-banner__icon {
+    flex: none;
+    margin-top: 2px;
+    color: var(--color-accent-300);
+  }
+
+  /* ---- Home-page hours summary ----------------------------------------- */
+  .hours-summary__body {
+    margin-top: 12px;
+  }
+
+  .hours-summary__today {
+    font-size: var(--text-lead);
+    font-weight: 600;
+    color: var(--color-heading);
+    /* Reserve the line so filling it in from script cannot shift the page. */
+    min-height: 1.55em;
+  }
+
+  .hours-summary__detail {
+    margin-top: 2px;
+    color: var(--color-muted);
+    font-size: var(--text-sm);
+  }
+
   /* ---- Opening hours: status badge, announcement, timetable ------------ */
 
   /*

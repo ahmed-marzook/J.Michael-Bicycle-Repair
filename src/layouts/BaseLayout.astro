@@ -43,6 +43,7 @@ import {
   serialiseJsonLd,
 } from '../lib/structured-data';
 import { loadPricing } from '../lib/pricing-sheet';
+import AnnouncementBanner from '../components/AnnouncementBanner.astro';
 
 interface Props {
   /** The page-specific part of the <title>. */
@@ -174,6 +175,13 @@ const jsonLd = serialiseJsonLd(
   </head>
   <body>
     <a class="skip-link" href="#main">Skip to content</a>
+
+    {/*
+      Above the header on purpose: a closure notice is the first thing a
+      visitor needs, whichever page they landed on. It scrolls away with the
+      page rather than competing with the sticky header for space.
+    */}
+    <AnnouncementBanner />
 
     <SiteHeader />
 
