@@ -61,7 +61,7 @@ const description = `Bicycle repairs and servicing in Bletchley, Milton Keynes: 
         lead="Thirteen services, exactly as they appear on the Google Business listing."
       />
 
-      <ul class="mt-8 grid gap-4 sm:grid-cols-2 md:mt-10 md:grid-cols-3 md:gap-6">
+      <ul role="list" class="mt-8 grid gap-4 sm:grid-cols-2 md:mt-10 md:grid-cols-3 md:gap-6">
         {services.map((service) => <ServiceCard service={service} />)}
       </ul>
     </div>

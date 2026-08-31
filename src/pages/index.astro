@@ -136,7 +136,7 @@ const description = `Bicycle repairs and servicing in Bletchley, Milton Keynes. 
     aria-label={`Why people use ${identity.spokenName}`}
   >
     <div class="container-page">
-      <ul class="grid gap-5 md:grid-cols-3 md:gap-8">
+      <ul role="list" class="grid gap-5 md:grid-cols-3 md:gap-8">
         {
           trustItems.map((item) => (
             <li class="flex items-center gap-3">
@@ -166,7 +166,7 @@ const description = `Bicycle repairs and servicing in Bletchley, Milton Keynes. 
         lead={`From a puncture to a full wheel build, all done in the workshop on ${address.streetName}.`}
       />
 
-      <ul class="mt-8 grid gap-4 sm:grid-cols-2 md:mt-10 md:grid-cols-3 md:gap-6">
+      <ul role="list" class="mt-8 grid gap-4 sm:grid-cols-2 md:mt-10 md:grid-cols-3 md:gap-6">
         {featuredServices.map((service) => <ServiceCard service={service} />)}
       </ul>
 
@@ -192,7 +192,7 @@ const description = `Bicycle repairs and servicing in Bletchley, Milton Keynes. 
         {pricing.headlineStatement}
       </p>
 
-      <ul class="mt-8 grid gap-4 md:grid-cols-3 md:gap-6">
+      <ul role="list" class="mt-8 grid gap-4 md:grid-cols-3 md:gap-6">
         {pricing.tiers.map((tier) => <PricingCard tier={tier} />)}
       </ul>
 
@@ -217,7 +217,7 @@ const description = `Bicycle repairs and servicing in Bletchley, Milton Keynes. 
         lead="Thirteen points, in the same order, on every bike. Here are three of them, in Jimmy's own words."
       />
 
-      <ul class="mt-8 grid gap-4 md:mt-10 md:grid-cols-3 md:gap-6">
+      <ul role="list" class="mt-8 grid gap-4 md:mt-10 md:grid-cols-3 md:gap-6">
         {
           planHighlights.map((highlight) => (
             <li class="card flex h-full flex-col">
@@ -250,7 +250,7 @@ const description = `Bicycle repairs and servicing in Bletchley, Milton Keynes. 
         lead={reviews.placeholderDisclaimer}
       />
 
-      <ul class="mt-8 grid gap-4 md:mt-10 md:grid-cols-3 md:gap-6">
+      <ul role="list" class="mt-8 grid gap-4 md:mt-10 md:grid-cols-3 md:gap-6">
         {
           reviews.testimonials.slice(0, 3).map((testimonial, index) => (
             <li class:list={[index === 2 ? 'hidden md:block' : null]}>
