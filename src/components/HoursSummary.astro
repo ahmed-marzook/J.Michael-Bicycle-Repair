@@ -23,19 +23,29 @@ interface Props {
   csvUrl?: string;
   /** Where "see full opening times" points. */
   href?: string;
+  /**
+   * One line for the hero: badge and today's hours side by side, with the
+   * link folded in. The block form stacks them and is meant for a section.
+   */
+  compact?: boolean;
   class?: string;
 }
 
 const {
   csvUrl = HOURS_CSV_URL,
   href = '/contact/#opening-times',
+  compact = false,
   class: className,
 } = Astro.props;
 
 const { rows } = await loadHours();
 ---
 
-<div class:list={['hours-summary', className]} data-hours-summary data-url={csvUrl}>
+<div
+  class:list={['hours-summary', compact ? 'hours-summary--compact' : null, className]}
+  data-hours-summary
+  data-url={csvUrl}
+>
   {/*
     The whole week, carried as data only. Nothing here renders: it is the
     schedule the script reads to work out today without a second request.
@@ -67,9 +77,9 @@ const { rows } = await loadHours();
     <p class="hours-summary__today" data-today-line></p>
     <p class="hours-summary__detail" data-today-detail hidden></p>
 
-    <p class="mt-3">
+    <p class:list={[compact ? 'hours-summary__link' : 'mt-3']}>
       <a class="link-standalone" href={href}>
-        See full opening times
+        {compact ? 'All opening times' : 'See full opening times'}
         <Icon name="chevronRight" size={16} />
       </a>
     </p>

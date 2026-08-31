@@ -1043,6 +1043,40 @@
     font-size: var(--text-sm);
   }
 
+
+  /*
+   * Compact (hero) variant: badge, today's hours and the link on one row,
+   * wrapping to stacked lines on a narrow phone rather than squeezing.
+   */
+  .hours-summary--compact {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 10px 14px;
+  }
+
+  .hours-summary--compact .hours-summary__body {
+    margin-top: 0;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 4px 12px;
+  }
+
+  .hours-summary--compact .hours-summary__today {
+    font-size: var(--text-base);
+    /* Reserved so filling the line in from script shifts nothing. */
+    min-height: 1.65em;
+  }
+
+  .hours-summary--compact .hours-summary__detail {
+    margin-top: 0;
+  }
+
+  .hours-summary__link {
+    margin: 0;
+  }
+
   /* ---- Opening hours: status badge, announcement, timetable ------------ */
 
   /*
