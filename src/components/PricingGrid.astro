@@ -40,6 +40,7 @@ import Star from '../assets/star.svg';
 import Icon from './Icon.astro';
 import PartsCaveat from './PartsCaveat.astro';
 import { business } from '../data/business';
+import { loadPricing, PRICING_CSV_URL } from '../lib/pricing-sheet';
 
 interface Props {
   /**
@@ -50,12 +51,16 @@ interface Props {
   class?: string;
 }
 
-const DEFAULT_CSV_URL =
-  'https://docs.google.com/spreadsheets/d/e/2PACX-1vRsoVS7zhnyuUS7dc7cr6Edb4CANG0MoJ4gKkcrArNfWNTPzUI5o6HtAwVk6FQ42R5Wiw6oz1cqS29G/pub?output=csv';
-
-const { csvUrl = DEFAULT_CSV_URL, class: className } = Astro.props;
+const { csvUrl = PRICING_CSV_URL, class: className } = Astro.props;
 
 const { pricing, contact, identity } = business;
+
+/**
+ * Prices for this build, read from the published sheet. Memoised, so this
+ * shares the single fetch with BaseLayout's JSON-LD rather than making a
+ * second request.
+ */
+const { tiers } = await loadPricing();
 const phoneDigits = contact.phoneE164.replace('+', '');
 
 /** `https://wa.me/<digits>?text=<encoded>` — built the same way here and in JS. */
@@ -72,7 +77,7 @@ const waHref = (text: string): string =>
     data-phone={phoneDigits}
   >
     {
-      pricing.tiers.map((tier) => (
+      tiers.map((tier) => (
         <li
           id={`tier-${tier.id}`}
           data-card-id={tier.sheetId}

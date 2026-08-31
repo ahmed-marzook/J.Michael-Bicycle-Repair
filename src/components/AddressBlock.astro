@@ -21,7 +21,7 @@ const { address } = business;
 ---
 
 <div class={className}>
-  <p class="flex items-start gap-3">
+  <div class="flex items-start gap-3">
     <span class="icon-tile" aria-hidden="true">
       <Icon name="pin" size={24} />
     </span>
@@ -31,7 +31,7 @@ const { address } = business;
       {address.locality}, {address.region}<br />
       {address.postcode}
     </address>
-  </p>
+  </div>
 
   {
     withDirections ? (

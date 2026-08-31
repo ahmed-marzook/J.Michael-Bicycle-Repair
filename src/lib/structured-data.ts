@@ -24,6 +24,7 @@ import {
   type Business,
   type DayHours,
   type Weekday,
+  type PricingTier,
 } from '../data/business';
 
 /* ===========================================================================
@@ -98,6 +99,12 @@ export interface LocalBusinessJsonLd {
   readonly priceRange: string;
   readonly currenciesAccepted: string;
   readonly hasMap: string;
+  /**
+   * Absolute URL of an image for the local rich result. Google needs one to
+   * render the enhanced listing; without it the site can appear as a plain
+   * link beside competitors showing photo cards.
+   */
+  readonly image?: string;
   readonly hasOfferCatalog: OfferCatalogJsonLd;
   readonly openingHoursSpecification?: readonly OpeningHoursSpecificationJsonLd[];
 }
@@ -112,6 +119,24 @@ export interface BuildLocalBusinessOptions {
   readonly siteUrl?: URL | string | undefined;
   /** Override the data source. Defaults to the single source of truth. */
   readonly data?: Business;
+  /**
+   * Live pricing tiers for this build, from src/lib/pricing-sheet.ts.
+   *
+   * The published Google Sheet is the source of truth for prices, so the
+   * offers here MUST be generated from the same tiers the cards render. If
+   * this is omitted the tiers in `data` are used, which is only correct when
+   * the sheet was unreachable and the page fell back to them too. Passing one
+   * and not the other is how the structured data ends up advertising a price
+   * the page does not show.
+   */
+  readonly pricingTiers?: readonly PricingTier[];
+  /** Live `priceRange`, derived from the same tiers. */
+  readonly priceRange?: string;
+  /**
+   * Absolute URL of the image for the rich result. Pass the built OG image so
+   * there is one image for the whole site and it is a real raster file.
+   */
+  readonly imageUrl?: string;
 }
 
 /** schema.org day URIs, keyed by our own `Weekday` union. */
@@ -153,10 +178,12 @@ export function buildLocalBusinessJsonLd(
   const siteUrl =
     options.siteUrl === undefined ? undefined : new URL(options.siteUrl).origin;
 
+  const tiers = options.pricingTiers ?? pricing.tiers;
+
   const offerCatalog: OfferCatalogJsonLd = {
     '@type': 'OfferCatalog',
     name: data.servicingPlan.title,
-    itemListElement: pricing.tiers.map((tier) => ({
+    itemListElement: tiers.map((tier) => ({
       '@type': 'Offer' as const,
       name: tier.name,
       description: tier.eligibility,
@@ -206,7 +233,8 @@ export function buildLocalBusinessJsonLd(
       bestRating: reviews.aggregate.bestRating,
       worstRating: reviews.aggregate.worstRating,
     },
-    priceRange: pricing.priceRange,
+    priceRange: options.priceRange ?? pricing.priceRange,
+    ...(options.imageUrl ? { image: options.imageUrl } : {}),
     currenciesAccepted: 'GBP',
     hasMap: address.directionsUrl,
     hasOfferCatalog: offerCatalog,

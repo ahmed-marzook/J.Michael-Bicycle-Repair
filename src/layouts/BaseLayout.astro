@@ -42,6 +42,7 @@ import {
   buildLocalBusinessJsonLd,
   serialiseJsonLd,
 } from '../lib/structured-data';
+import { loadPricing } from '../lib/pricing-sheet';
 
 interface Props {
   /** The page-specific part of the <title>. */
@@ -90,8 +91,22 @@ const appleTouchIcon = await getImage({
   height: 180,
 });
 
+/*
+ * The published pricing sheet is the source of truth for prices, so the
+ * offers in the structured data are generated from the SAME tiers the pricing
+ * cards render. Fetched once per build and memoised. If the sheet is
+ * unreachable this falls back to src/data/business.ts, and so do the cards, so
+ * the two can never disagree.
+ */
+const { tiers: pricingTiers, priceRange } = await loadPricing();
+
 const jsonLd = serialiseJsonLd(
-  buildLocalBusinessJsonLd({ siteUrl: Astro.site }),
+  buildLocalBusinessJsonLd({
+    siteUrl: Astro.site,
+    pricingTiers,
+    priceRange,
+    imageUrl: ogImageUrl,
+  }),
 );
 ---
 
