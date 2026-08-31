@@ -112,7 +112,13 @@ const description = `Bicycle repairs and servicing in Bletchley, Milton Keynes. 
           } himself.
         </p>
 
-        <div class="mt-8 flex flex-col gap-3 sm:flex-row sm:items-center">
+        {/*
+          Above the buttons on purpose: "is he open right now" is the question
+          a visitor answers before deciding whether to message him.
+        */}
+        <HoursSummary compact class="mt-6" />
+
+        <div class="mt-6 flex flex-col gap-3 sm:flex-row sm:items-center">
           <WhatsAppButton block class="sm:w-auto" />
           <Button
             href={contact.telHref}
@@ -308,7 +314,6 @@ const description = `Bicycle repairs and servicing in Bletchley, Milton Keynes. 
           lead={`Easy to reach from anywhere in ${address.region}, and the bike does not have to be rideable to get here.`}
         />
         <AddressBlock class="mt-8" />
-        <HoursSummary class="mt-8" />
       </div>
 
       {/*
