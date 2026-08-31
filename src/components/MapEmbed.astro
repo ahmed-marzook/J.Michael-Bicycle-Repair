@@ -34,12 +34,10 @@ const { class: className } = Astro.props;
 const { address } = business;
 ---
 
-<details class={`map-embed ${className ?? ''}`} open>
+<details class:list={['map-embed', className]} open>
   <summary class="map-embed__summary">
     <span class="map-embed__summary-label">Map of the workshop</span>
-    <span class="map-embed__summary-note">
-      Shown by Google Maps. Select to collapse.
-    </span>
+    <span class="map-embed__summary-note">Shown by Google Maps</span>
   </summary>
 
   <div class="map-embed__frame">

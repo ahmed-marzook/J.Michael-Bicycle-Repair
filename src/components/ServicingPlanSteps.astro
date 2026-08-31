@@ -26,7 +26,7 @@ const { points } = business.servicingPlan;
 
 {
   variant === 'numbered' ? (
-    <ol class:list={['grid gap-4 md:grid-cols-2 md:gap-6', className]}>
+    <ol role="list" class:list={['grid gap-4 md:grid-cols-2 md:gap-6', className]}>
       {points.map((point, index) => (
         <li class="card flex items-start gap-4">
           <span
@@ -43,7 +43,7 @@ const { points } = business.servicingPlan;
       ))}
     </ol>
   ) : (
-    <ol class:list={['star-list grid gap-3 text-sm md:grid-cols-2 md:gap-x-6', className]}>
+    <ol role="list" class:list={['star-list grid gap-3 text-sm md:grid-cols-2 md:gap-x-6', className]}>
       {points.map((point) => (
         <li>
           <Star

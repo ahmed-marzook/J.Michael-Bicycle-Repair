@@ -104,6 +104,8 @@ const description = `Contact ${identity.ownerFirstName} at ${identity.legalName}
         </p>
       </div>
 
+      <h2 class="mt-10">Every way to reach {identity.ownerFirstName}</h2>
+
       <ul role="list" class="mt-6 grid gap-4 md:grid-cols-2 md:gap-6">
         {
           channels.map((channel) => (
@@ -145,10 +147,11 @@ const description = `Contact ${identity.ownerFirstName} at ${identity.legalName}
       </div>
 
       {/*
-        The real map, behind an opt-in so nothing is fetched from Google unless
-        the visitor asks for it. The address and the directions button above are
-        always available, so this is an extra rather than the only way to find
-        the workshop.
+        The real map, open by default. It loads from Google on page load and
+        sets Google's cookies; this page and the home page are the only two
+        that make a third-party request. The address and the directions button
+        above are always available, so this is an extra rather than the only
+        way to find the workshop.
       */}
       <MapEmbed />
     </div>

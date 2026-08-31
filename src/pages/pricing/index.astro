@@ -19,12 +19,15 @@ import CtaBand from '../../components/CtaBand.astro';
 import Icon from '../../components/Icon.astro';
 
 import { business } from '../../data/business';
+import { loadPricing } from '../../lib/pricing-sheet';
 
 const { identity, pricing, servicingPlan } = business;
 
-const description = `Bicycle servicing prices in Bletchley, Milton Keynes: ${pricing.tiers
-  .map((tier) => `${tier.displayPrice} ${tier.heading.toLowerCase()}`)
-  .join(', ')}. Every price includes the full ${servicingPlan.points.length}-point servicing plan.`;
+/** Live prices from the published sheet; shares the build's single fetch. */
+const { tiers, headlineStatement } = await loadPricing();
+
+/* Kept under ~155 chars so Google does not truncate it in the results page. */
+const description = `Bicycle servicing in Bletchley, Milton Keynes from ${tiers[0]?.displayPrice}. Every price includes the full ${servicingPlan.points.length}-point plan. WhatsApp ${identity.ownerFirstName} anytime.`;
 ---
 
 <BaseLayout title="Servicing prices" description={description}>
@@ -44,9 +47,13 @@ const description = `Bicycle servicing prices in Bletchley, Milton Keynes: ${pri
       </div>
 
       {/* 3. The one-line adult statement, then the grid */}
-      <p class="mt-10 text-lead font-semibold text-heading">
-        {pricing.headlineStatement}
-      </p>
+      {/*
+        This doubles as the section heading for the grid below. Without an h2
+        here the page outline skipped h1 -> h3 across the three tier cards.
+      */}
+      <h2 class="mt-10 text-lead font-semibold text-heading">
+        {headlineStatement}
+      </h2>
 
       {/*
         4. The three tiers, plus the parts caveat which PricingGrid renders

@@ -31,10 +31,14 @@ import HeroWorkshop from '../assets/hero-workshop.svg';
 import MapEmbed from '../components/MapEmbed.astro';
 
 import { business } from '../data/business';
+import { loadPricing } from '../lib/pricing-sheet';
 import { loadTestimonials } from '../lib/featurable-reviews';
 
 const { identity, contact, address, pricing, reviews, servicingPlan, services } =
   business;
+
+/** Live prices from the published sheet; shares the build's single fetch. */
+const { tiers: pricingTiers, headlineStatement } = await loadPricing();
 
 /**
  * Real Google reviews, fetched once at build time and baked into this HTML.
@@ -82,7 +86,7 @@ const trustItems = [
   },
 ];
 
-const description = `Bicycle repairs and servicing in Bletchley, Milton Keynes. Full 13-point servicing plan from ${pricing.tiers[0]?.displayPrice}. Rated ${reviews.aggregate.ratingValue.toFixed(1)} from ${reviews.aggregate.reviewCount} Google reviews. WhatsApp ${identity.ownerFirstName} anytime.`;
+const description = `Bicycle repairs and servicing in Bletchley, Milton Keynes. Full 13-point servicing plan from ${pricingTiers[0]?.displayPrice}. Rated ${reviews.aggregate.ratingValue.toFixed(1)} from ${reviews.aggregate.reviewCount} Google reviews. WhatsApp ${identity.ownerFirstName} anytime.`;
 ---
 
 <BaseLayout
@@ -198,11 +202,11 @@ const description = `Bicycle repairs and servicing in Bletchley, Milton Keynes. 
       />
 
       <p class="mt-6 text-lead font-semibold text-heading">
-        {pricing.headlineStatement}
+        {headlineStatement}
       </p>
 
       <ul role="list" class="mt-8 grid gap-4 md:grid-cols-3 md:gap-6">
-        {pricing.tiers.map((tier) => <PricingCard tier={tier} />)}
+        {pricingTiers.map((tier) => <PricingCard tier={tier} />)}
       </ul>
 
       <PartsCaveat class="mt-6" />
@@ -304,9 +308,10 @@ const description = `Bicycle repairs and servicing in Bletchley, Milton Keynes. 
       </div>
 
       {/*
-        Same opt-in map as /contact/. Nothing is fetched from Google until the
-        visitor opens it, so the home page keeps making zero third-party
-        requests on load. The address and directions button above always work.
+        The same map component as /contact/. It renders open by default (the
+        client's decision), so this page and /contact/ are the only two that
+        contact Google and set Google's cookies on load. The address and the
+        directions button above work without it, and it can be collapsed.
       */}
       <MapEmbed />
     </div>
