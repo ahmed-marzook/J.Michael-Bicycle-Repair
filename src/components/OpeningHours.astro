@@ -46,17 +46,34 @@
  */
 import { business } from '../data/business';
 import { loadHours, HOURS_CSV_URL, BUSINESS_TIME_ZONE } from '../lib/hours-sheet';
+import {
+  loadAnnouncement,
+  ANNOUNCEMENT_CSV_URL,
+} from '../lib/announcement-sheet';
 
 interface Props {
   /** Pass an empty string to render the timetable with no live update. */
   csvUrl?: string;
+  /** The one-row announcement tab. Empty string disables the banner. */
+  announcementUrl?: string;
   class?: string;
 }
 
-const { csvUrl = HOURS_CSV_URL, class: className } = Astro.props;
+const {
+  csvUrl = HOURS_CSV_URL,
+  announcementUrl = ANNOUNCEMENT_CSV_URL,
+  class: className,
+} = Astro.props;
 const { identity, contact } = business;
 
 const { rows } = await loadHours();
+
+/*
+ * The one-off notice. Rendered into the HTML when it is live at build time so
+ * it is there without JavaScript, and re-checked in the browser because a page
+ * built before the expiry date may still be served after it.
+ */
+const { announcement } = await loadAnnouncement();
 
 /*
  * With no timetable at all (sheet unreachable AND hours still unknown in
@@ -66,7 +83,9 @@ const { rows } = await loadHours();
 const hasSchedule = rows.length > 0;
 ---
 
-<div class={className} data-opening-hours data-csv-url={csvUrl} data-tz={BUSINESS_TIME_ZONE}>
+<div class={className} data-opening-hours data-csv-url={csvUrl} data-tz={BUSINESS_TIME_ZONE}
+  data-announcement-url={announcementUrl}
+  data-announcement-override={announcement?.statusOverride ?? "auto"}>
   {/* Status badge. Neutral until JS computes it — see the header comment. */}
   <p class="hours-status" data-hours-status>
     <span class="hours-status__dot" aria-hidden="true"></span>
@@ -79,7 +98,14 @@ const hasSchedule = rows.length > 0;
     know which day the page is being read on. `hidden` keeps an empty notice
     out of the accessibility tree.
   */}
-  <p class="hours-announcement" data-hours-announcement hidden></p>
+  <p
+    class="hours-announcement"
+    data-hours-announcement
+    data-expires={announcement?.expiresOn ?? ''}
+    hidden={!announcement?.message}
+  >
+    {announcement?.message ?? ''}
+  </p>
 
   {
     hasSchedule ? (
@@ -125,7 +151,7 @@ const hasSchedule = rows.length > 0;
 
 {
   csvUrl ? (
-    <script is:inline define:vars={{ csvUrl, timeZone: BUSINESS_TIME_ZONE }}>
+    <script is:inline define:vars={{ csvUrl, announcementUrl, timeZone: BUSINESS_TIME_ZONE }}>
       (function () {
         var root = document.querySelector('[data-opening-hours]');
         if (!root) return;
@@ -342,13 +368,81 @@ const hasSchedule = rows.length > 0;
           return computeStatus(byDay, nowInBusinessZone());
         }
 
+        /* Today in the workshop's zone, as YYYY-MM-DD, for expiry checks. */
+        function businessToday() {
+          var parts = new Intl.DateTimeFormat('en-CA', {
+            timeZone: timeZone,
+            year: 'numeric',
+            month: '2-digit',
+            day: '2-digit',
+          }).formatToParts(new Date());
+          var out = {};
+          parts.forEach(function (part) {
+            out[part.type] = part.value;
+          });
+          return out.year + '-' + out.month + '-' + out.day;
+        }
+
+        /* YYYY-MM-DD or DD/MM/YYYY (day-first: this is a UK business). */
+        function normaliseDate(raw) {
+          var value = (raw || '').trim();
+          if (!value) return '';
+          var iso = /^(\d{4})-(\d{1,2})-(\d{1,2})$/.exec(value);
+          if (iso) {
+            return iso[1] + '-' + pad(iso[2]) + '-' + pad(iso[3]);
+          }
+          var uk = /^(\d{1,2})[/-](\d{1,2})[/-](\d{4})$/.exec(value);
+          if (uk) return uk[3] + '-' + pad(uk[2]) + '-' + pad(uk[1]);
+          return '';
+        }
+
+        function pad(n) {
+          return String(n).length === 1 ? '0' + n : String(n);
+        }
+
+        /*
+         * `expires_on` is inclusive: a notice for "closed Thu 4 Sept" must
+         * still be visible on the 4th, and gone on the 5th.
+         */
+        function notExpired(expires) {
+          if (!expires) return true;
+          return businessToday() <= expires;
+        }
+
+        /*
+         * The banner is re-checked here as well as at build time, because a
+         * page built before the expiry date can still be served after it.
+         */
+        function announcementState() {
+          var box = root.querySelector('[data-hours-announcement]');
+          if (!box) return { message: '', override: 'auto' };
+          var expires = box.getAttribute('data-expires') || '';
+          var live = notExpired(expires);
+          return {
+            message: live ? (box.textContent || '').trim() : '',
+            override: live ? root.getAttribute('data-announcement-override') || 'auto' : 'auto',
+          };
+        }
+
         function refreshFromDom() {
           var weekday = nowInBusinessZone().weekday;
           var tr = todayRow(weekday);
-          var override = tr ? tr.getAttribute('data-override') || 'auto' : 'auto';
+          var dayOverride = tr ? tr.getAttribute('data-override') || 'auto' : 'auto';
+          var notice = announcementState();
+
           markToday(weekday);
-          showAnnouncement(tr ? tr.getAttribute('data-announcement') || '' : '');
-          applyStatus(decide(readStaticSchedule(), override));
+
+          /*
+           * The one-off notice wins over the recurring day rule. A "closed
+           * today" typed in this morning has to beat "open every Thursday".
+           */
+          showAnnouncement(notice.message || (tr ? tr.getAttribute('data-announcement') || '' : ''));
+          applyStatus(
+            decide(
+              readStaticSchedule(),
+              notice.override !== 'auto' ? notice.override : dayOverride,
+            ),
+          );
         }
 
         refreshFromDom();
@@ -426,6 +520,58 @@ const hasSchedule = rows.length > 0;
           .finally(function () {
             clearTimeout(timer);
           });
+
+        /* The one-off notice, so a banner set today shows without a redeploy. */
+        if (announcementUrl) {
+          var noticeController = new AbortController();
+          var noticeTimer = setTimeout(function () {
+            noticeController.abort();
+          }, 6000);
+
+          fetch(bustCache(announcementUrl), {
+            signal: noticeController.signal,
+            credentials: 'omit',
+            cache: 'no-store',
+          })
+            .then(function (res) {
+              if (!res.ok) throw new Error('HTTP ' + res.status);
+              return res.text();
+            })
+            .then(function (text) {
+              var rows = toObjects(parseCsv(text));
+              var row = null;
+              for (var i = 0; i < rows.length; i++) {
+                if (rows[i].message || rows[i].status_override) {
+                  row = rows[i];
+                  break;
+                }
+              }
+
+              var box = root.querySelector('[data-hours-announcement]');
+              if (!box) return;
+
+              if (!row) {
+                box.textContent = '';
+                box.setAttribute('data-expires', '');
+                root.setAttribute('data-announcement-override', 'auto');
+              } else {
+                box.textContent = row.message || '';
+                box.setAttribute('data-expires', normaliseDate(row.expires_on));
+                root.setAttribute(
+                  'data-announcement-override',
+                  (row.status_override || 'auto').toLowerCase(),
+                );
+              }
+
+              refreshFromDom();
+            })
+            .catch(function () {
+              /* Keep whatever the build baked in. */
+            })
+            .finally(function () {
+              clearTimeout(noticeTimer);
+            });
+        }
       })();
     </script>
   ) : null

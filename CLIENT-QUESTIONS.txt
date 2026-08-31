@@ -189,14 +189,31 @@ without a developer.
 7. NOTES — decisions already made, for reference
 ---------------------------------------------------------------------------
 
-* PRICES AND HOURS ARE EDITABLE WITHOUT A DEVELOPER.
-  Both are driven by the published Google Sheet. Edit the sheet, and the
-  live site picks it up. Two things to know:
-    - The page must be reloaded to see it.
-    - The "status_override" column forces the status badge regardless of
-      the timetable. LEAVE IT EMPTY for normal automatic behaviour. It
-      currently says OPEN, which means the badge will read "Open now"
-      even at 3am on a Sunday until it is cleared.
+* PRICES, HOURS AND THE NOTICE BANNER ARE ALL EDITABLE WITHOUT A
+  DEVELOPER. All three are driven by the published Google Sheet. Edit
+  the sheet, reload the page, and the live site picks it up.
+
+  Three tabs:
+    - Pricing        the three servicing prices
+    - Hours          the weekly timetable. The "note" column is for
+                     RECURRING notes ("late drop-off by appointment"
+                     every Thursday).
+    - Announcement   ONE row, for a ONE-OFF notice:
+                       message           what to say, empty for none
+                       status_override   open / busy / closed, or empty.
+                                         Empty is normal - the badge
+                                         works itself out from the times.
+                       expires_on        the last day it shows. It is
+                                         INCLUSIVE, so a notice for
+                                         "closed Thu 4 Sept" with
+                                         2026-09-04 still shows all day
+                                         on the 4th and is gone on the
+                                         5th. Empty = shows until
+                                         deleted.
+
+  The expiry matters: without it a "drop-ins welcome today!" notice sits
+  on the site for weeks because nobody remembered to clear it, and a
+  stale notice is worse than none.
 
 * The site works fully without JavaScript, loads no third-party
   trackers, and sets no cookies of its own. The only outside content is
