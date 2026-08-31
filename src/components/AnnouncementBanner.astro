@@ -1,0 +1,67 @@
+---
+/**
+ * AnnouncementBanner.astro — the one-off notice, on every page.
+ *
+ * Rendered by BaseLayout above the header, so it is the first thing read and
+ * cannot be missed. "Closed today, back Friday" is the single most useful
+ * thing the site can say on the day it is true, and a visitor who lands on
+ * /pricing/ from a search deserves to see it as much as one on /contact/.
+ *
+ * It is in the HTML at build time when live, so it works with no JavaScript.
+ * The script only re-checks the expiry (a page built before the date can still
+ * be served after it) and picks up a notice typed in since the last deploy.
+ *
+ * Not dismissible, and deliberately so: a closure notice that a visitor can
+ * permanently hide is a closure notice they will miss next week. It is one
+ * quiet line, and it removes itself on its expiry date.
+ */
+import { loadAnnouncement, ANNOUNCEMENT_CSV_URL } from '../lib/announcement-sheet';
+
+interface Props {
+  /** Empty string disables the live refresh. */
+  url?: string;
+}
+
+const { url = ANNOUNCEMENT_CSV_URL } = Astro.props;
+const { announcement } = await loadAnnouncement();
+
+const message = announcement?.message ?? '';
+---
+
+<div
+  class="announcement-banner"
+  data-announcement-banner
+  data-url={url}
+  data-message={message}
+  data-override={announcement?.statusOverride ?? 'auto'}
+  data-expires={announcement?.expiresOn ?? ''}
+  hidden={!message}
+>
+  <p class="announcement-banner__inner">
+    <svg
+      class="announcement-banner__icon"
+      viewBox="0 0 24 24"
+      width="18"
+      height="18"
+      aria-hidden="true"
+      focusable="false"
+    >
+      <path
+        d="M12 2 1 21h22L12 2Zm0 6v6m0 3v1"
+        fill="none"
+        stroke="currentColor"
+        stroke-width="2"
+        stroke-linecap="round"
+        stroke-linejoin="round"></path>
+    </svg>
+    <span data-banner-text>{message}</span>
+  </p>
+</div>
+
+<script>
+  import { initAnnouncementBanner } from '../scripts/hours-runtime';
+
+  document
+    .querySelectorAll<HTMLElement>('[data-announcement-banner]')
+    .forEach((el) => initAnnouncementBanner(el));
+</script>

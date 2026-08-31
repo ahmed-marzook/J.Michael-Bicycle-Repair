@@ -1,7 +1,6 @@
 ---
 /**
- * OpeningHours.astro — the weekly timetable, the live status badge and the
- * client's announcement notice.
+ * OpeningHours.astro — the weekly timetable and the live status badge.
  *
  * HOW IT WORKS
  *
@@ -12,15 +11,15 @@
  *    hour ago shows without a redeploy, and computes the open/closed badge
  *    against the current time.
  *
- * PER-DAY OVERRIDES
+ * OVERRIDES
  *
- * `status_override` and `custom_announcement` belong to the day whose row they
- * are typed into: a notice on the Sunday row shows on Sundays. Reading them
- * business-wide, from whichever row happened to fill them in first, meant a
- * Sunday notice appeared on a Monday and the row you chose meant nothing.
+ * `status_override` on an hours row is the RECURRING rule for that weekday.
+ * The one-off notice and its override live in their own tab and are rendered
+ * site-wide by AnnouncementBanner; a one-off beats the recurring rule, and the
+ * banner tells this component when it changes.
  *
- * Which day it is cannot be known at build time, so both are carried on each
- * row as data attributes and the script picks out today's.
+ * Which day it is cannot be known at build time, so the whole week is carried
+ * as data attributes and src/scripts/hours-runtime.ts picks out today's.
  *
  * WHY THE BADGE IS NOT RENDERED STATICALLY
  *
@@ -45,35 +44,18 @@
  * Open uses the brand green, busy the gold accent, closed the muted neutral.
  */
 import { business } from '../data/business';
-import { loadHours, HOURS_CSV_URL, BUSINESS_TIME_ZONE } from '../lib/hours-sheet';
-import {
-  loadAnnouncement,
-  ANNOUNCEMENT_CSV_URL,
-} from '../lib/announcement-sheet';
+import { loadHours, HOURS_CSV_URL } from '../lib/hours-sheet';
 
 interface Props {
   /** Pass an empty string to render the timetable with no live update. */
   csvUrl?: string;
-  /** The one-row announcement tab. Empty string disables the banner. */
-  announcementUrl?: string;
   class?: string;
 }
 
-const {
-  csvUrl = HOURS_CSV_URL,
-  announcementUrl = ANNOUNCEMENT_CSV_URL,
-  class: className,
-} = Astro.props;
+const { csvUrl = HOURS_CSV_URL, class: className } = Astro.props;
 const { identity, contact } = business;
 
 const { rows } = await loadHours();
-
-/*
- * The one-off notice. Rendered into the HTML when it is live at build time so
- * it is there without JavaScript, and re-checked in the browser because a page
- * built before the expiry date may still be served after it.
- */
-const { announcement } = await loadAnnouncement();
 
 /*
  * With no timetable at all (sheet unreachable AND hours still unknown in
@@ -83,28 +65,11 @@ const { announcement } = await loadAnnouncement();
 const hasSchedule = rows.length > 0;
 ---
 
-<div class={className} data-opening-hours data-csv-url={csvUrl} data-tz={BUSINESS_TIME_ZONE}
-  data-announcement-url={announcementUrl}
-  data-announcement-override={announcement?.statusOverride ?? "auto"}>
+<div class={className} id="opening-times" data-opening-hours data-url={csvUrl}>
   {/* Status badge. Neutral until JS computes it — see the header comment. */}
-  <p class="hours-status" data-hours-status>
+  <p class="hours-status" data-status>
     <span class="hours-status__dot" aria-hidden="true"></span>
-    <span data-hours-status-text>Check today's hours below</span>
-  </p>
-
-  {/*
-    Today's announcement, filled in by the script. It starts empty and hidden
-    because the announcement belongs to a specific day and the build cannot
-    know which day the page is being read on. `hidden` keeps an empty notice
-    out of the accessibility tree.
-  */}
-  <p
-    class="hours-announcement"
-    data-hours-announcement
-    data-expires={announcement?.expiresOn ?? ''}
-    hidden={!announcement?.message}
-  >
-    {announcement?.message ?? ''}
+    <span data-status-text>Check today's hours below</span>
   </p>
 
   {
@@ -124,8 +89,11 @@ const hasSchedule = rows.length > 0;
           {rows.map((row) => (
             <tr
               data-day={row.day}
+              data-closed={String(row.isClosed)}
+              data-open={row.opens ?? ''}
+              data-close={row.closes ?? ''}
+              data-note={row.note}
               data-override={row.statusOverride}
-              data-announcement={row.announcement}
               class:list={[row.isClosed ? 'is-closed' : null]}
             >
               <th scope="row">
@@ -149,430 +117,10 @@ const hasSchedule = rows.length > 0;
   }
 </div>
 
-{
-  csvUrl ? (
-    <script is:inline define:vars={{ csvUrl, announcementUrl, timeZone: BUSINESS_TIME_ZONE }}>
-      (function () {
-        var root = document.querySelector('[data-opening-hours]');
-        if (!root) return;
+<script>
+  import { initOpeningHours } from '../scripts/hours-runtime';
 
-        var WEEK = [
-          'sunday',
-          'monday',
-          'tuesday',
-          'wednesday',
-          'thursday',
-          'friday',
-          'saturday',
-        ];
-
-        /* ---- CSV (same grammar as src/lib/csv.ts) ------------------------ */
-        function parseCsv(text) {
-          var rows = [];
-          var row = [];
-          var field = '';
-          var inQuotes = false;
-
-          function endRow() {
-            row.push(field);
-            field = '';
-            if (row.length > 1 || row[0] !== '') rows.push(row);
-            row = [];
-          }
-
-          for (var i = 0; i < text.length; i++) {
-            var ch = text[i];
-            if (inQuotes) {
-              if (ch === '"') {
-                if (text[i + 1] === '"') {
-                  field += '"';
-                  i++;
-                } else {
-                  inQuotes = false;
-                }
-              } else {
-                field += ch;
-              }
-              continue;
-            }
-            if (ch === '"') inQuotes = true;
-            else if (ch === ',') {
-              row.push(field);
-              field = '';
-            } else if (ch === '\n' || ch === '\r') {
-              if (ch === '\r' && text[i + 1] === '\n') i++;
-              endRow();
-            } else field += ch;
-          }
-          endRow();
-          return rows;
-        }
-
-        function toObjects(rows) {
-          if (rows.length < 2) return [];
-          var keys = rows[0].map(function (k) {
-            return k.trim().toLowerCase();
-          });
-          return rows.slice(1).map(function (cells) {
-            var obj = {};
-            for (var i = 0; i < keys.length; i++) obj[keys[i]] = (cells[i] || '').trim();
-            return obj;
-          });
-        }
-
-        /* ---- The workshop's clock, not the visitor's -------------------- */
-        function nowInBusinessZone() {
-          var parts = new Intl.DateTimeFormat('en-GB', {
-            timeZone: timeZone,
-            weekday: 'long',
-            hour: '2-digit',
-            minute: '2-digit',
-            hour12: false,
-          }).formatToParts(new Date());
-
-          var out = { weekday: '', hour: 0, minute: 0 };
-          parts.forEach(function (part) {
-            if (part.type === 'weekday') out.weekday = part.value.toLowerCase();
-            else if (part.type === 'hour') out.hour = parseInt(part.value, 10);
-            else if (part.type === 'minute') out.minute = parseInt(part.value, 10);
-          });
-          return out;
-        }
-
-        function minutesOf(time) {
-          var m = /^([01]?\d|2[0-3]):([0-5]\d)$/.exec((time || '').trim());
-          if (!m) return null;
-          return parseInt(m[1], 10) * 60 + parseInt(m[2], 10);
-        }
-
-        function isTruthy(value) {
-          return /^(true|yes|y|1)$/i.test((value || '').trim());
-        }
-
-        function formatTime(time) {
-          var mins = minutesOf(time);
-          if (mins === null) return '';
-          var h = Math.floor(mins / 60);
-          var m = mins % 60;
-          var suffix = h < 12 ? 'am' : 'pm';
-          var h12 = h % 12 === 0 ? 12 : h % 12;
-          return m === 0 ? h12 + suffix : h12 + ':' + (m < 10 ? '0' + m : m) + suffix;
-        }
-
-        /* ---- Status ------------------------------------------------------ */
-        var STATUS = {
-          open: { text: 'Open now — in the workshop', cls: 'is-open' },
-          busy: { text: 'Fully booked today', cls: 'is-busy' },
-          closed: { text: 'Closed', cls: 'is-closed' },
-        };
-
-        function computeStatus(byDay, now) {
-          var today = byDay[now.weekday];
-          if (!today || today.closed) return 'closed';
-          var opens = minutesOf(today.open);
-          var closes = minutesOf(today.close);
-          if (opens === null || closes === null) return 'closed';
-          var minutes = now.hour * 60 + now.minute;
-          return minutes >= opens && minutes < closes ? 'open' : 'closed';
-        }
-
-        function applyStatus(key) {
-          var el = root.querySelector('[data-hours-status]');
-          var text = root.querySelector('[data-hours-status-text]');
-          var status = STATUS[key];
-          if (!el || !text || !status) return;
-          el.classList.remove('is-open', 'is-busy', 'is-closed');
-          el.classList.add(status.cls);
-          text.textContent = status.text;
-        }
-
-        function markToday(weekday) {
-          var rows = root.querySelectorAll('tbody tr');
-          Array.prototype.forEach.call(rows, function (tr) {
-            var isToday = tr.getAttribute('data-day') === weekday;
-            tr.classList.toggle('is-today', isToday);
-
-            var cell = tr.querySelector('th[scope="row"]');
-            if (!cell) return;
-            var pill = cell.querySelector('.today-pill');
-
-            if (isToday && !pill) {
-              pill = document.createElement('span');
-              pill.className = 'today-pill';
-              pill.textContent = 'Today';
-              cell.appendChild(pill);
-            } else if (!isToday && pill) {
-              pill.remove();
-            }
-          });
-        }
-
-        /*
-         * Today's highlight and the badge depend only on the clock, so do them
-         * immediately. The fetch below refines the data but must not delay
-         * this: if the network is slow or blocked the visitor still gets a
-         * correct badge from the build-time timetable.
-         */
-        var now = nowInBusinessZone();
-        markToday(now.weekday);
-
-        function readStaticSchedule() {
-          var byDay = {};
-          Array.prototype.forEach.call(root.querySelectorAll('tbody tr'), function (tr) {
-            var day = tr.getAttribute('data-day');
-            var cell = tr.querySelector('[data-hours-cell]');
-            if (!day || !cell) return;
-            var text = cell.textContent || '';
-            var closed = /closed/i.test(text);
-            // "8:30am – 5:30pm" -> back to 24h for comparison.
-            var times = text.match(/(\d{1,2})(?::(\d{2}))?\s*(am|pm)/gi) || [];
-            function to24(token) {
-              var m = /(\d{1,2})(?::(\d{2}))?\s*(am|pm)/i.exec(token);
-              if (!m) return null;
-              var h = parseInt(m[1], 10) % 12;
-              if (/pm/i.test(m[3])) h += 12;
-              return h + ':' + (m[2] || '00');
-            }
-            byDay[day] = {
-              closed: closed || times.length < 2,
-              open: times[0] ? to24(times[0]) : null,
-              close: times[1] ? to24(times[1]) : null,
-            };
-          });
-          return byDay;
-        }
-
-        /*
-         * Today's row owns today's override and notice. Reading them from
-         * whichever row filled them in first made a Sunday notice show on a
-         * Monday.
-         */
-        function todayRow(weekday) {
-          return root.querySelector('tbody tr[data-day="' + weekday + '"]');
-        }
-
-        function showAnnouncement(text) {
-          var box = root.querySelector('[data-hours-announcement]');
-          if (!box) return;
-          if (text) {
-            box.textContent = text;
-            box.hidden = false;
-          } else {
-            box.textContent = '';
-            box.hidden = true;
-          }
-        }
-
-        function decide(byDay, override) {
-          if (override && override !== 'auto' && STATUS[override]) return override;
-          return computeStatus(byDay, nowInBusinessZone());
-        }
-
-        /* Today in the workshop's zone, as YYYY-MM-DD, for expiry checks. */
-        function businessToday() {
-          var parts = new Intl.DateTimeFormat('en-CA', {
-            timeZone: timeZone,
-            year: 'numeric',
-            month: '2-digit',
-            day: '2-digit',
-          }).formatToParts(new Date());
-          var out = {};
-          parts.forEach(function (part) {
-            out[part.type] = part.value;
-          });
-          return out.year + '-' + out.month + '-' + out.day;
-        }
-
-        /* YYYY-MM-DD or DD/MM/YYYY (day-first: this is a UK business). */
-        function normaliseDate(raw) {
-          var value = (raw || '').trim();
-          if (!value) return '';
-          var iso = /^(\d{4})-(\d{1,2})-(\d{1,2})$/.exec(value);
-          if (iso) {
-            return iso[1] + '-' + pad(iso[2]) + '-' + pad(iso[3]);
-          }
-          var uk = /^(\d{1,2})[/-](\d{1,2})[/-](\d{4})$/.exec(value);
-          if (uk) return uk[3] + '-' + pad(uk[2]) + '-' + pad(uk[1]);
-          return '';
-        }
-
-        function pad(n) {
-          return String(n).length === 1 ? '0' + n : String(n);
-        }
-
-        /*
-         * `expires_on` is inclusive: a notice for "closed Thu 4 Sept" must
-         * still be visible on the 4th, and gone on the 5th.
-         */
-        function notExpired(expires) {
-          if (!expires) return true;
-          return businessToday() <= expires;
-        }
-
-        /*
-         * The banner is re-checked here as well as at build time, because a
-         * page built before the expiry date can still be served after it.
-         */
-        function announcementState() {
-          var box = root.querySelector('[data-hours-announcement]');
-          if (!box) return { message: '', override: 'auto' };
-          var expires = box.getAttribute('data-expires') || '';
-          var live = notExpired(expires);
-          return {
-            message: live ? (box.textContent || '').trim() : '',
-            override: live ? root.getAttribute('data-announcement-override') || 'auto' : 'auto',
-          };
-        }
-
-        function refreshFromDom() {
-          var weekday = nowInBusinessZone().weekday;
-          var tr = todayRow(weekday);
-          var dayOverride = tr ? tr.getAttribute('data-override') || 'auto' : 'auto';
-          var notice = announcementState();
-
-          markToday(weekday);
-
-          /*
-           * The one-off notice wins over the recurring day rule. A "closed
-           * today" typed in this morning has to beat "open every Thursday".
-           */
-          showAnnouncement(notice.message || (tr ? tr.getAttribute('data-announcement') || '' : ''));
-          applyStatus(
-            decide(
-              readStaticSchedule(),
-              notice.override !== 'auto' ? notice.override : dayOverride,
-            ),
-          );
-        }
-
-        refreshFromDom();
-
-        /* ---- Live refresh ------------------------------------------------ */
-        if (!csvUrl) return;
-
-        /*
-         * Google caches the published CSV for five minutes
-         * (Cache-Control: private, max-age=300), so without a unique
-         * parameter a visitor can be handed a copy from before the client's
-         * last edit. Google ignores unknown parameters.
-         */
-        function bustCache(url) {
-          return url + (url.indexOf('?') === -1 ? '?' : '&') + '_=' + Date.now();
-        }
-
-        var controller = new AbortController();
-        var timer = setTimeout(function () {
-          controller.abort();
-        }, 6000);
-
-        fetch(bustCache(csvUrl), {
-            signal: controller.signal,
-            credentials: 'omit',
-            cache: 'no-store',
-          })
-          .then(function (res) {
-            if (!res.ok) throw new Error('HTTP ' + res.status);
-            return res.text();
-          })
-          .then(function (text) {
-            var rows = toObjects(parseCsv(text));
-            if (!rows.length) return;
-
-            rows.forEach(function (row) {
-              var day = (row.day || '').toLowerCase();
-              if (WEEK.indexOf(day) === -1) return;
-
-              var closed = isTruthy(row.is_closed);
-              var opens = minutesOf(row.open_time);
-              var closes = minutesOf(row.close_time);
-              var unusable = !closed && (opens === null || closes === null);
-
-              var tr = root.querySelector('tbody tr[data-day="' + day + '"]');
-              if (!tr) return;
-
-              // Per-day override and notice, kept on the row they belong to.
-              tr.setAttribute(
-                'data-override',
-                (row.status_override || 'auto').toLowerCase(),
-              );
-              tr.setAttribute('data-announcement', row.custom_announcement || '');
-
-              var hoursCell = tr.querySelector('[data-hours-cell]');
-              if (hoursCell) {
-                hoursCell.textContent =
-                  closed || unusable
-                    ? 'Closed'
-                    : formatTime(row.open_time) + ' – ' + formatTime(row.close_time);
-              }
-
-              var noteCell = tr.querySelector('[data-note-cell]');
-              if (noteCell) noteCell.textContent = row.note || '';
-
-              tr.classList.toggle('is-closed', closed || unusable);
-            });
-
-            // Re-derive everything from the freshly-updated rows.
-            refreshFromDom();
-          })
-          .catch(function () {
-            /* Keep the build-time timetable and the clock-derived badge. */
-          })
-          .finally(function () {
-            clearTimeout(timer);
-          });
-
-        /* The one-off notice, so a banner set today shows without a redeploy. */
-        if (announcementUrl) {
-          var noticeController = new AbortController();
-          var noticeTimer = setTimeout(function () {
-            noticeController.abort();
-          }, 6000);
-
-          fetch(bustCache(announcementUrl), {
-            signal: noticeController.signal,
-            credentials: 'omit',
-            cache: 'no-store',
-          })
-            .then(function (res) {
-              if (!res.ok) throw new Error('HTTP ' + res.status);
-              return res.text();
-            })
-            .then(function (text) {
-              var rows = toObjects(parseCsv(text));
-              var row = null;
-              for (var i = 0; i < rows.length; i++) {
-                if (rows[i].message || rows[i].status_override) {
-                  row = rows[i];
-                  break;
-                }
-              }
-
-              var box = root.querySelector('[data-hours-announcement]');
-              if (!box) return;
-
-              if (!row) {
-                box.textContent = '';
-                box.setAttribute('data-expires', '');
-                root.setAttribute('data-announcement-override', 'auto');
-              } else {
-                box.textContent = row.message || '';
-                box.setAttribute('data-expires', normaliseDate(row.expires_on));
-                root.setAttribute(
-                  'data-announcement-override',
-                  (row.status_override || 'auto').toLowerCase(),
-                );
-              }
-
-              refreshFromDom();
-            })
-            .catch(function () {
-              /* Keep whatever the build baked in. */
-            })
-            .finally(function () {
-              clearTimeout(noticeTimer);
-            });
-        }
-      })();
-    </script>
-  ) : null
-}
+  document
+    .querySelectorAll<HTMLElement>('[data-opening-hours]')
+    .forEach((el) => initOpeningHours(el));
+</script>
