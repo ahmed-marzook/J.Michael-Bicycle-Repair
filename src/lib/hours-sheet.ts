@@ -229,11 +229,28 @@ function withCacheBuster(url: string): string {
   return `${url}${url.includes('?') ? '&' : '?'}_=${Date.now()}`;
 }
 
+/*
+ * Memoised so a production build makes exactly one request no matter how many
+ * pages need the data.
+ *
+ * In dev that would be wrong: the dev server is one long-lived process, so a
+ * single cache would freeze the sheet at whatever it said when the server
+ * started, and editing the spreadsheet would appear to do nothing until the
+ * server was restarted. So in dev the value is held for a few seconds only —
+ * long enough to serve one page render from one request, short enough that a
+ * refresh picks up an edit.
+ */
+const CACHE_TTL_MS = import.meta.env.DEV ? 5000 : Infinity;
+
 let cached: Promise<HoursResult> | null = null;
+let cachedAt = 0;
 
 /** Memoised so the whole build makes one request. Never rejects. */
 export function loadHours(): Promise<HoursResult> {
-  cached ??= load();
+  if (!cached || Date.now() - cachedAt > CACHE_TTL_MS) {
+    cached = load();
+    cachedAt = Date.now();
+  }
   return cached;
 }
 

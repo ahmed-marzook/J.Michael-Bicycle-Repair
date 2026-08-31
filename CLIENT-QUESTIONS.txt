@@ -1,0 +1,211 @@
+===========================================================================
+QUESTIONS & NOTES FOR JIMMY — J.Michael Bicycle Repair website
+===========================================================================
+
+Everything on the site is real and taken from his own signage and Google
+listing, EXCEPT the items below. Anything unanswered is either using a
+clearly-marked placeholder or has been deliberately left off the site.
+
+Nothing here is invented. Where a fact was not known, the site says so
+rather than guessing.
+
+Last updated: 31 August 2026
+
+
+---------------------------------------------------------------------------
+1. BLOCKING — the site cannot go live without these
+---------------------------------------------------------------------------
+
+[ ] 1.1  DOMAIN NAME
+         What web address should this live at?
+         e.g. jmichaelbicyclerepair.co.uk / bletchleybikerepair.co.uk
+
+         WHY IT MATTERS: every "canonical" link, the sitemap, and the
+         preview card that shows when the link is shared on Facebook or
+         WhatsApp are all built from this. Right now they all point at a
+         placeholder (example.com), so sharing the link would look broken.
+         This is the single biggest launch blocker.
+
+[ ] 1.2  OPENING HOURS — NEEDS CONFIRMING
+         The spreadsheet currently says:
+           Mon-Thu  8:30am - 5:30pm
+           Fri      8:30am - 5:00pm
+           Sat      9:00am - 2:00pm
+           Sun      Closed
+
+         Are these correct and can they be published?
+
+         WHY IT MATTERS: if these are wrong, customers ride to a shut
+         workshop. Until Jimmy confirms, the hours are shown on the site
+         but have deliberately NOT been submitted to Google (see 4.1), so
+         they will not appear in his Google listing or Maps yet.
+
+         Also ask:
+         - Any regular closures (lunch, half-day, holidays)?
+         - Is he ever open Sunday by arrangement?
+         - Should the site say "appointment only" instead of fixed hours?
+
+
+---------------------------------------------------------------------------
+2. PHOTOGRAPHS — every image is currently a placeholder drawing
+---------------------------------------------------------------------------
+
+Phone photos taken in daylight are absolutely fine. No photographer
+needed. Ask him to send the ORIGINALS by WhatsApp or email — please do
+NOT pull them off Facebook, because Facebook heavily compresses uploads
+and it muddles who owns what.
+
+[ ] 2.1  Jimmy at the workstand working on a bike        (landscape, 4:3)
+         The most important one. This is the main image on the home page.
+
+[ ] 2.2  Head-and-shoulders photo of Jimmy               (square)
+         For the About page. A friendly, natural one - it is a one-man
+         business and people are choosing HIM.
+
+[ ] 2.3  The unit frontage on Tavistock Street           (landscape, 3:2)
+         With the sign visible, so people recognise it when they arrive.
+
+[ ] 2.4  A wheel in the truing jig, close up             (landscape, 3:2)
+
+[ ] 2.5  A cleaned chain and cassette, close up          (landscape, 3:2)
+
+[ ] 2.6  One "hero" shot for link previews               (landscape)
+         This is what people see when the link is shared on Facebook or
+         WhatsApp. Could be the same as 2.1 or 2.3.
+
+[ ] 2.7  BEFORE-AND-AFTER pairs — optional but valuable
+         For a repair business these sell the work better than anything
+         else on the page. Even two or three pairs would be excellent.
+
+PERMISSION CHECK — please confirm with him:
+    - Did he take these photos himself?
+    - Is he happy for them to be published on a public website?
+    - Do any show customers' faces, or readable number plates?
+      (If so we should crop or swap them - publishing identifiable
+       people on a commercial site needs their permission.)
+
+
+---------------------------------------------------------------------------
+3. ABOUT PAGE — currently written from facts only
+---------------------------------------------------------------------------
+
+The About page is deliberately thin because we refused to invent a
+backstory. These would each add something real:
+
+[ ] 3.1  How long has he been repairing bikes?
+         ("Over 20 years" is far more persuasive than saying nothing.)
+
+[ ] 3.2  Formal qualifications or training?
+         e.g. Cytech level, City & Guilds, manufacturer training.
+         Exact wording please - we will not paraphrase a qualification.
+
+[ ] 3.3  How did he get started? Anything he is known for?
+
+[ ] 3.4  Any bikes he does NOT work on?
+         e.g. e-bike battery/motor work, carbon frame repair, hydraulic
+         suspension internals. Better to say up front than waste a
+         customer's trip.
+
+[ ] 3.5  Does he collect/deliver, or is it drop-off only?
+         Any radius or charge?
+
+
+---------------------------------------------------------------------------
+4. GOOGLE REVIEWS & LISTING
+---------------------------------------------------------------------------
+
+[ ] 4.1  OPENING HOURS IN GOOGLE — hold until 1.2 is confirmed
+         Once confirmed, the hours can also be fed to Google so they show
+         in his Maps listing and search results. Held back deliberately:
+         wrong hours in Google are much harder to undo than wrong hours
+         on a page.
+
+[ ] 4.2  REAL GOOGLE REVIEWS
+         The site shows his real rating (5.0 from 85 reviews) and links
+         to the listing, but the review QUOTES on the page are currently
+         clearly-labelled placeholders.
+
+         To show the real ones we need a free Featurable account
+         (featurable.com) connected to his Google Business Profile, then
+         the widget ID. Free, unlimited views, no card needed.
+
+         ALTERNATIVE he may already have: an Elfsight widget was set up.
+         Not recommended as the main source - the free tier stops showing
+         reviews after 200 views a month, which on a site meant to be
+         found would mean reviews vanishing mid-month.
+
+[ ] 4.3  Permission to quote reviewers by name?
+         Even though the reviews are public, worth asking.
+
+
+---------------------------------------------------------------------------
+5. PRICES & SERVICES
+---------------------------------------------------------------------------
+
+The three servicing prices (£40 / £45 / £50) came from his printed price
+card and are now driven by the Google Sheet, so he or you can change them
+without a developer.
+
+[ ] 5.1  Are the three prices still current?
+
+[ ] 5.2  Common jobs with a fixed price worth listing?
+         e.g. puncture repair, gear cable, brake pads, wheel build.
+         Right now anything outside the service plan says "message for a
+         quote", which is honest but loses people who want a number.
+
+[ ] 5.3  Does he sell bikes? The signage says "Sales" but there is
+         nothing about it on the site. Second-hand? Refurbished?
+         Worth a section if so.
+
+[ ] 5.4  Payment methods — cash, card, bank transfer?
+
+[ ] 5.5  Any guarantee or warranty on work done?
+
+
+---------------------------------------------------------------------------
+6. CONTACT & PRACTICALITIES
+---------------------------------------------------------------------------
+
+[ ] 6.1  Is 07399 351272 the right number for WhatsApp?
+         The whole site is built around WhatsApp as the main way to get
+         in touch, so worth double-checking it is monitored.
+
+[ ] 6.2  Is jmichaelbicyclerepair@gmail.com checked regularly?
+         If not, we should de-emphasise it so nobody waits on a reply.
+
+[ ] 6.3  Should the full workshop address be public?
+         Currently published in full. Some sole traders prefer
+         "by appointment - address on booking".
+
+[ ] 6.4  Parking / access — anything useful to tell a customer arriving
+         with a bike? (The site already mentions help loading and
+         unloading, which came from his own price card.)
+
+[ ] 6.5  How far does he cover? Site currently says Bletchley, Fenny
+         Stratford and Milton Keynes.
+
+
+---------------------------------------------------------------------------
+7. NOTES — decisions already made, for reference
+---------------------------------------------------------------------------
+
+* PRICES AND HOURS ARE EDITABLE WITHOUT A DEVELOPER.
+  Both are driven by the published Google Sheet. Edit the sheet, and the
+  live site picks it up. Two things to know:
+    - The page must be reloaded to see it.
+    - The "status_override" column forces the status badge regardless of
+      the timetable. LEAVE IT EMPTY for normal automatic behaviour. It
+      currently says OPEN, which means the badge will read "Open now"
+      even at 3am on a Sunday until it is cleared.
+
+* The site works fully without JavaScript, loads no third-party
+  trackers, and sets no cookies of its own. The only outside content is
+  the Google map on the home and contact pages.
+
+* Opening hours are shown in UK time regardless of where the visitor is.
+
+* We have NOT invented anything: no fake reviews, no made-up
+  qualifications, no guessed opening hours, no "most popular" badge on a
+  price tier we have no evidence for.
+
+===========================================================================
