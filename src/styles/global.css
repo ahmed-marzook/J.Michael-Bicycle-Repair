@@ -993,6 +993,143 @@
     color: var(--color-muted);
   }
 
+
+  /* ---- Opening hours: status badge, announcement, timetable ------------ */
+
+  /*
+   * The badge reserves its own height in every state, so the swap from the
+   * neutral build-time text to the computed status cannot shift the page.
+   */
+  .hours-status {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    min-height: 40px;
+    padding: 8px 14px;
+    border-radius: var(--radius-full);
+    border: 1px solid var(--color-border);
+    background-color: var(--color-surface);
+    font-size: var(--text-sm);
+    font-weight: 600;
+    color: var(--color-body);
+  }
+
+  .hours-status__dot {
+    width: 10px;
+    height: 10px;
+    border-radius: var(--radius-full);
+    background-color: var(--color-muted);
+    flex: none;
+  }
+
+  /* brand-600 on white is 6.54:1; the dot is decorative and aria-hidden. */
+  .hours-status.is-open {
+    border-color: var(--color-brand-600);
+    background-color: var(--color-brand-50);
+    color: var(--color-brand-700);
+  }
+
+  .hours-status.is-open .hours-status__dot {
+    background-color: var(--color-brand-600);
+  }
+
+  /* accent-600 (#8A5B00) is the accent that clears 4.5:1 as body text. */
+  .hours-status.is-busy {
+    border-color: var(--color-accent-500);
+    background-color: #FDF6E3;
+    color: var(--color-accent-600);
+  }
+
+  .hours-status.is-busy .hours-status__dot {
+    background-color: var(--color-accent-500);
+  }
+
+  .hours-status.is-closed {
+    color: var(--color-muted);
+  }
+
+  /*
+   * A quiet pulse on the open dot only. Removed wholesale under
+   * prefers-reduced-motion by the block at the end of this file.
+   */
+  @media (prefers-reduced-motion: no-preference) {
+    .hours-status.is-open .hours-status__dot {
+      animation: hours-pulse 2.4s ease-in-out infinite;
+    }
+  }
+
+  @keyframes hours-pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.45; }
+  }
+
+  .hours-announcement {
+    margin-top: 16px;
+    padding: 12px 16px;
+    border-left: 4px solid var(--color-accent-500);
+    border-radius: var(--radius-md);
+    background-color: var(--color-surface-subtle);
+    color: var(--color-body);
+    font-size: var(--text-sm);
+  }
+
+  .hours-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: var(--text-sm);
+  }
+
+  .hours-table th,
+  .hours-table td {
+    text-align: left;
+    padding: 10px 12px;
+    border-bottom: 1px solid var(--color-border);
+    vertical-align: top;
+  }
+
+  .hours-table thead th {
+    font-family: var(--font-display);
+    font-weight: 600;
+    color: var(--color-heading);
+    white-space: nowrap;
+  }
+
+  .hours-table tbody th {
+    font-weight: 600;
+    color: var(--color-heading);
+    white-space: nowrap;
+  }
+
+  .hours-table tr.is-closed td,
+  .hours-table tr.is-closed th {
+    color: var(--color-muted);
+  }
+
+  .hours-table tr.is-today {
+    background-color: var(--color-brand-50);
+  }
+
+  .today-pill {
+    display: inline-block;
+    margin-left: 8px;
+    padding: 1px 8px;
+    border-radius: var(--radius-full);
+    background-color: var(--color-brand-600);
+    color: var(--color-white);
+    font-family: var(--font-body);
+    font-size: var(--text-caption);
+    font-weight: 600;
+    vertical-align: middle;
+  }
+
+  /* The notes column is the first thing to go on a narrow screen. */
+  @media (max-width: 30rem) {
+    .hours-table th:nth-child(3),
+    .hours-table td:nth-child(3) {
+      display: none;
+    }
+  }
+
   /* Gold star bullets on the servicing plan. Design system 1.4. */
   .star-list > li {
     display: flex;

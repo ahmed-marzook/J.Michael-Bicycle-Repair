@@ -17,8 +17,7 @@ import WhatsAppButton from '../components/WhatsAppButton.astro';
 import RatingPill from '../components/RatingPill.astro';
 import SectionHeading from '../components/SectionHeading.astro';
 import ServiceCard from '../components/ServiceCard.astro';
-import PricingCard from '../components/PricingCard.astro';
-import PartsCaveat from '../components/PartsCaveat.astro';
+import PricingGrid from '../components/PricingGrid.astro';
 import TestimonialCard from '../components/TestimonialCard.astro';
 import AddressBlock from '../components/AddressBlock.astro';
 import HoursBlock from '../components/HoursBlock.astro';
@@ -205,11 +204,16 @@ const description = `Bicycle repairs and servicing in Bletchley, Milton Keynes. 
         {headlineStatement}
       </p>
 
-      <ul role="list" class="mt-8 grid gap-4 md:grid-cols-3 md:gap-6">
-        {pricingTiers.map((tier) => <PricingCard tier={tier} />)}
-      </ul>
+      {/*
+        The same component as /pricing/, so the home page gets the live price
+        refresh too. Rendering the cards directly here meant the sheet only
+        reached this page on a rebuild, and re-publishing the sheet silently
+        left the home page showing the old prices.
 
-      <PartsCaveat class="mt-6" />
+        PricingGrid renders the parts caveat itself, so the two can never be
+        separated.
+      */}
+      <PricingGrid class="mt-8" />
 
       <p class="mt-8">
         <a class="link-standalone" href="/pricing/">

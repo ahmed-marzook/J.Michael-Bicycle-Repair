@@ -17,7 +17,7 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
 import WhatsAppButton from '../../components/WhatsAppButton.astro';
 import SectionHeading from '../../components/SectionHeading.astro';
 import AddressBlock from '../../components/AddressBlock.astro';
-import HoursBlock from '../../components/HoursBlock.astro';
+import OpeningHours from '../../components/OpeningHours.astro';
 import Icon, { type IconName } from '../../components/Icon.astro';
 
 import MapEmbed from '../../components/MapEmbed.astro';
@@ -162,9 +162,9 @@ const description = `Contact ${identity.ownerFirstName} at ${identity.legalName}
     <div class="container-page">
       <SectionHeading
         eyebrow="Opening times"
-        heading="Appointments are arranged directly"
+        heading="When the workshop is open"
       />
-      <HoursBlock class="mt-8 max-w-copy" />
+      <OpeningHours class="mt-8 max-w-copy" />
     </div>
   </section>
 </BaseLayout>
