@@ -5,13 +5,11 @@ import tailwindcss from '@tailwindcss/vite';
 
 // https://astro.build/config
 export default defineConfig({
-  // TODO(client): the production domain is not decided yet. Replace this
-  // placeholder with the real origin (no trailing slash) before going live.
-  // `site` is what @astrojs/sitemap writes into sitemap-index.xml and what
-  // canonical / Open Graph URLs are resolved against, so a wrong value here
-  // silently ships wrong URLs to Google and to Facebook/WhatsApp previews.
-  // Remember to update `public/robots.txt` at the same time.
-  site: 'https://example.com',
+  // Base domain for sitemaps, canonical tags, and Open Graph URLs (no trailing slash)
+  site: 'https://ahmed-marzook.github.io',
+
+  // Repository subpath required for GitHub Pages project sites
+  base: '/J.Michael-Bicycle-Repair',
 
   // Pure static output: no adapter, no SSR, no runtime server.
   // Deployable as plain files to GitHub Pages / Azure Static Web Apps.
@@ -20,7 +18,7 @@ export default defineConfig({
   integrations: [sitemap()],
 
   image: {
-    // Astro 6.3+ gates SVG rasterisation behind this flag, because a hostile
+    // Astro gates SVG rasterisation behind this flag, because a hostile
     // SVG can be made expensive to render. Every SVG in src/assets/ is authored
     // in this repository and no remote image is ever processed, so the risk it
     // guards against does not exist here.

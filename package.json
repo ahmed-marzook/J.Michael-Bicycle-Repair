@@ -5,7 +5,7 @@
   "private": true,
   "description": "Static marketing site for Bletchley Bicycle Repairs, Servicing & Sales by J.Michael & Co.",
   "engines": {
-    "node": ">=20.3.0"
+    "node": ">=22.12.0"
   },
   "scripts": {
     "dev": "astro dev",
