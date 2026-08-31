@@ -12,6 +12,16 @@
  *    hour ago shows without a redeploy, and computes the open/closed badge
  *    against the current time.
  *
+ * PER-DAY OVERRIDES
+ *
+ * `status_override` and `custom_announcement` belong to the day whose row they
+ * are typed into: a notice on the Sunday row shows on Sundays. Reading them
+ * business-wide, from whichever row happened to fill them in first, meant a
+ * Sunday notice appeared on a Monday and the row you chose meant nothing.
+ *
+ * Which day it is cannot be known at build time, so both are carried on each
+ * row as data attributes and the script picks out today's.
+ *
  * WHY THE BADGE IS NOT RENDERED STATICALLY
  *
  * "Open now" is true for about eight hours a day. Baked into static HTML it
@@ -46,7 +56,7 @@ interface Props {
 const { csvUrl = HOURS_CSV_URL, class: className } = Astro.props;
 const { identity, contact } = business;
 
-const { rows, announcement, statusOverride } = await loadHours();
+const { rows } = await loadHours();
 
 /*
  * With no timetable at all (sheet unreachable AND hours still unknown in
@@ -58,19 +68,18 @@ const hasSchedule = rows.length > 0;
 
 <div class={className} data-opening-hours data-csv-url={csvUrl} data-tz={BUSINESS_TIME_ZONE}>
   {/* Status badge. Neutral until JS computes it — see the header comment. */}
-  <p class="hours-status" data-hours-status data-override={statusOverride}>
+  <p class="hours-status" data-hours-status>
     <span class="hours-status__dot" aria-hidden="true"></span>
     <span data-hours-status-text>Check today's hours below</span>
   </p>
 
   {/*
-    Announcement. Rendered only when there is one; the live script can fill and
-    reveal it, so the element exists either way. `hidden` keeps it out of the
-    accessibility tree while empty rather than announcing a blank notice.
+    Today's announcement, filled in by the script. It starts empty and hidden
+    because the announcement belongs to a specific day and the build cannot
+    know which day the page is being read on. `hidden` keeps an empty notice
+    out of the accessibility tree.
   */}
-  <p class="hours-announcement" data-hours-announcement hidden={!announcement}>
-    {announcement}
-  </p>
+  <p class="hours-announcement" data-hours-announcement hidden></p>
 
   {
     hasSchedule ? (
@@ -87,7 +96,12 @@ const hasSchedule = rows.length > 0;
         </thead>
         <tbody>
           {rows.map((row) => (
-            <tr data-day={row.day} class:list={[row.isClosed ? 'is-closed' : null]}>
+            <tr
+              data-day={row.day}
+              data-override={row.statusOverride}
+              data-announcement={row.announcement}
+              class:list={[row.isClosed ? 'is-closed' : null]}
+            >
               <th scope="row">
                 {row.label}
                 {/*
@@ -302,18 +316,42 @@ const hasSchedule = rows.length > 0;
           return byDay;
         }
 
-        var overrideAttr = (
-          root.querySelector('[data-hours-status]') || {}
-        ).getAttribute
-          ? root.querySelector('[data-hours-status]').getAttribute('data-override')
-          : 'auto';
+        /*
+         * Today's row owns today's override and notice. Reading them from
+         * whichever row filled them in first made a Sunday notice show on a
+         * Monday.
+         */
+        function todayRow(weekday) {
+          return root.querySelector('tbody tr[data-day="' + weekday + '"]');
+        }
+
+        function showAnnouncement(text) {
+          var box = root.querySelector('[data-hours-announcement]');
+          if (!box) return;
+          if (text) {
+            box.textContent = text;
+            box.hidden = false;
+          } else {
+            box.textContent = '';
+            box.hidden = true;
+          }
+        }
 
         function decide(byDay, override) {
           if (override && override !== 'auto' && STATUS[override]) return override;
           return computeStatus(byDay, nowInBusinessZone());
         }
 
-        applyStatus(decide(readStaticSchedule(), overrideAttr));
+        function refreshFromDom() {
+          var weekday = nowInBusinessZone().weekday;
+          var tr = todayRow(weekday);
+          var override = tr ? tr.getAttribute('data-override') || 'auto' : 'auto';
+          markToday(weekday);
+          showAnnouncement(tr ? tr.getAttribute('data-announcement') || '' : '');
+          applyStatus(decide(readStaticSchedule(), override));
+        }
+
+        refreshFromDom();
 
         /* ---- Live refresh ------------------------------------------------ */
         if (!csvUrl) return;
@@ -346,16 +384,7 @@ const hasSchedule = rows.length > 0;
             var rows = toObjects(parseCsv(text));
             if (!rows.length) return;
 
-            var byDay = {};
-            var override = '';
-            var announcement = '';
-
             rows.forEach(function (row) {
-              if (!override && row.status_override) override = row.status_override.toLowerCase();
-              if (!announcement && row.custom_announcement) {
-                announcement = row.custom_announcement;
-              }
-
               var day = (row.day || '').toLowerCase();
               if (WEEK.indexOf(day) === -1) return;
 
@@ -364,14 +393,15 @@ const hasSchedule = rows.length > 0;
               var closes = minutesOf(row.close_time);
               var unusable = !closed && (opens === null || closes === null);
 
-              byDay[day] = {
-                closed: closed || unusable,
-                open: row.open_time,
-                close: row.close_time,
-              };
-
               var tr = root.querySelector('tbody tr[data-day="' + day + '"]');
               if (!tr) return;
+
+              // Per-day override and notice, kept on the row they belong to.
+              tr.setAttribute(
+                'data-override',
+                (row.status_override || 'auto').toLowerCase(),
+              );
+              tr.setAttribute('data-announcement', row.custom_announcement || '');
 
               var hoursCell = tr.querySelector('[data-hours-cell]');
               if (hoursCell) {
@@ -387,19 +417,8 @@ const hasSchedule = rows.length > 0;
               tr.classList.toggle('is-closed', closed || unusable);
             });
 
-            var box = root.querySelector('[data-hours-announcement]');
-            if (box) {
-              if (announcement) {
-                box.textContent = announcement;
-                box.hidden = false;
-              } else {
-                box.hidden = true;
-              }
-            }
-
-            var fresh = nowInBusinessZone();
-            markToday(fresh.weekday);
-            applyStatus(decide(byDay, override));
+            // Re-derive everything from the freshly-updated rows.
+            refreshFromDom();
           })
           .catch(function () {
             /* Keep the build-time timetable and the clock-derived badge. */
