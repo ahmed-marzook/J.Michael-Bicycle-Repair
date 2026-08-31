@@ -1,0 +1,343 @@
+---
+/**
+ * PricingGrid.astro — the three servicing tiers, with live prices from the
+ * client's published Google Sheet.
+ *
+ * HOW IT WORKS
+ *
+ * 1. Build time: all three cards are rendered in full from src/data/business.ts.
+ *    This is the state search engines index, the state a visitor with
+ *    JavaScript disabled sees, and the state that survives Google Sheets being
+ *    down. Prices are in the HTML, not fetched into it.
+ * 2. Browser: one fetch of the published CSV patches the text in place. If it
+ *    fails for any reason, the build-time prices simply stay.
+ *
+ * The static markup is therefore never a "skeleton" or a spinner: it is the
+ * real, correct answer. The fetch is an update, not a load. That is what keeps
+ * layout shift at zero and keeps the page honest when the network is not.
+ *
+ * TRADE-OFFS THE CLIENT SHOULD KNOW ABOUT (see also docs/PROJECT_BRIEF.md):
+ *
+ * - This is the only component on the site that ships JavaScript. Everything
+ *   else is static HTML and CSS.
+ * - The LocalBusiness JSON-LD offers are generated at build time from
+ *   business.ts. If a price is changed in the sheet and the site is NOT
+ *   rebuilt, the structured data and the visible price disagree, and Google
+ *   treats a price mismatch as a quality problem. So: after changing a price
+ *   in the sheet, also update business.ts and rebuild. The sheet is for
+ *   getting a correction live in minutes, not a permanent second source of
+ *   truth.
+ *
+ * SECURITY
+ *
+ * Everything arriving from the sheet is written with `textContent`, never
+ * `innerHTML`, and the WhatsApp href is rebuilt from an encoded template
+ * rather than taken from the sheet. Anyone who can edit the spreadsheet can
+ * therefore change words and prices, but cannot inject markup or script into
+ * the page, and cannot repoint a link at another domain.
+ */
+import Star from '../assets/star.svg';
+import Icon from './Icon.astro';
+import PartsCaveat from './PartsCaveat.astro';
+import { business } from '../data/business';
+
+interface Props {
+  /**
+   * Published Google Sheet CSV. Pass an empty string to disable the live
+   * update entirely and ship the static prices only, with no JavaScript.
+   */
+  csvUrl?: string;
+  class?: string;
+}
+
+const DEFAULT_CSV_URL =
+  'https://docs.google.com/spreadsheets/d/e/2PACX-1vRsoVS7zhnyuUS7dc7cr6Edb4CANG0MoJ4gKkcrArNfWNTPzUI5o6HtAwVk6FQ42R5Wiw6oz1cqS29G/pub?output=csv';
+
+const { csvUrl = DEFAULT_CSV_URL, class: className } = Astro.props;
+
+const { pricing, contact, identity } = business;
+const phoneDigits = contact.phoneE164.replace('+', '');
+
+/** `https://wa.me/<digits>?text=<encoded>` — built the same way here and in JS. */
+const waHref = (text: string): string =>
+  `https://wa.me/${phoneDigits}?text=${encodeURIComponent(text)}`;
+---
+
+<div class={className}>
+  <ul
+    role="list"
+    class="grid gap-4 md:grid-cols-3 md:gap-6"
+    data-pricing-grid
+    data-csv-url={csvUrl}
+    data-phone={phoneDigits}
+  >
+    {
+      pricing.tiers.map((tier) => (
+        <li
+          id={`tier-${tier.id}`}
+          data-card-id={tier.sheetId}
+          class:list={[
+            'card flex h-full flex-col overflow-hidden p-0',
+            tier.isMostCommon ? 'card-emphasis' : null,
+          ]}
+        >
+          {/* Gold top rule on the emphasised card. Decorative. */}
+          {tier.isMostCommon ? (
+            <div class="card-emphasis-rule" aria-hidden="true" />
+          ) : null}
+
+          <div class="flex h-full flex-col p-5 md:p-6">
+            <div class="flex items-start justify-between gap-3">
+              <span class="eyebrow" data-field="category">
+                {tier.category}
+              </span>
+              {/*
+                Always rendered so the live update has somewhere to write a
+                badge that only exists in the sheet. Hidden from everyone,
+                assistive tech included, until it has text.
+              */}
+              <span
+                class="badge"
+                data-field="badge"
+                hidden={!tier.badge}
+              >
+                {tier.badge ?? ''}
+              </span>
+            </div>
+
+            <p class="price mt-3" data-field="price">
+              {tier.displayPrice}
+            </p>
+
+            <h3 class="mt-3" data-field="title">
+              {tier.heading}
+            </h3>
+            <p class="mt-1 text-sm text-muted" data-field="subtitle">
+              {tier.summary}
+            </p>
+
+            <hr class="mt-5 border-0 border-t border-border" />
+
+            <ul role="list" class="star-list mt-5 grid gap-3 text-sm" data-field="features">
+              {pricing.cardHighlights.map((highlight) => (
+                <li>
+                  <Star
+                    width={16}
+                    height={16}
+                    focusable="false"
+                    aria-hidden="true"
+                    class="stars-on-light mt-1 shrink-0"
+                  />
+                  <span>{highlight}</span>
+                </li>
+              ))}
+            </ul>
+
+            <hr class="mt-5 border-0 border-t border-border" />
+
+            <div class="mt-5 md:mt-auto md:pt-5">
+              <a
+                class="btn btn-primary w-full"
+                data-field="cta"
+                href={waHref(tier.whatsAppText)}
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-label={`WhatsApp ${identity.ownerFirstName} about the ${tier.heading} service at ${tier.displayPrice}`}
+              >
+                <Icon name="whatsapp" size={20} />
+                WhatsApp {identity.ownerFirstName}
+                <span class="sr-only-text">(opens in a new tab)</span>
+              </a>
+            </div>
+          </div>
+        </li>
+      ))
+    }
+  </ul>
+
+  {/* The parts caveat belongs next to the prices, not buried. Brief section 3. */}
+  <PartsCaveat class="mt-6" />
+</div>
+
+{
+  csvUrl ? (
+    <script is:inline define:vars={{ csvUrl, phoneDigits }}>
+      /*
+       * Live price update. Everything below is progressive enhancement: the
+       * cards are already correct and complete before this runs, so every
+       * failure path is simply "do nothing".
+       */
+      (function () {
+        var grid = document.querySelector('[data-pricing-grid]');
+        if (!grid || !csvUrl) return;
+
+        /*
+         * RFC 4180 CSV: fields may be quoted, quoted fields may contain
+         * commas and newlines, and a literal quote inside a quoted field is
+         * doubled ("" -> "). Written as a character scanner because splitting
+         * on commas corrupts the eligibility text, which contains both commas
+         * and an inch mark (20" wheel size).
+         */
+        function parseCsv(text) {
+          var rows = [];
+          var row = [];
+          var field = '';
+          var inQuotes = false;
+
+          for (var i = 0; i < text.length; i++) {
+            var ch = text[i];
+
+            if (inQuotes) {
+              if (ch === '"') {
+                if (text[i + 1] === '"') {
+                  field += '"';
+                  i++;
+                } else {
+                  inQuotes = false;
+                }
+              } else {
+                field += ch;
+              }
+              continue;
+            }
+
+            if (ch === '"') {
+              inQuotes = true;
+            } else if (ch === ',') {
+              row.push(field);
+              field = '';
+            } else if (ch === '\n' || ch === '\r') {
+              // Treat CRLF as one break, and ignore blank lines.
+              if (ch === '\r' && text[i + 1] === '\n') i++;
+              row.push(field);
+              field = '';
+              if (row.length > 1 || row[0] !== '') rows.push(row);
+              row = [];
+            } else {
+              field += ch;
+            }
+          }
+
+          row.push(field);
+          if (row.length > 1 || row[0] !== '') rows.push(row);
+          return rows;
+        }
+
+        function toObjects(rows) {
+          if (rows.length < 2) return [];
+          var headers = rows[0].map(function (h) {
+            return h.trim().toLowerCase();
+          });
+          return rows.slice(1).map(function (cells) {
+            var obj = {};
+            for (var i = 0; i < headers.length; i++) {
+              obj[headers[i]] = (cells[i] || '').trim();
+            }
+            return obj;
+          });
+        }
+
+        /** Only touch the DOM when there is a real, changed value to write. */
+        function setText(el, value) {
+          if (!el || !value || el.textContent === value) return;
+          el.textContent = value;
+        }
+
+        function applyRow(card, row) {
+          setText(card.querySelector('[data-field="price"]'), row.price);
+          setText(card.querySelector('[data-field="category"]'), row.category);
+          setText(card.querySelector('[data-field="title"]'), row.title);
+          setText(card.querySelector('[data-field="subtitle"]'), row.subtitle);
+
+          var badge = card.querySelector('[data-field="badge"]');
+          if (badge) {
+            if (row.badge) {
+              badge.textContent = row.badge;
+              badge.hidden = false;
+            } else {
+              badge.hidden = true;
+            }
+          }
+
+          // Features arrive as one pipe-separated string.
+          var list = card.querySelector('[data-field="features"]');
+          if (list && row.features) {
+            var features = row.features
+              .split('|')
+              .map(function (f) {
+                return f.trim();
+              })
+              .filter(Boolean);
+
+            if (features.length) {
+              var star = list.querySelector('svg');
+              list.textContent = '';
+              features.forEach(function (feature) {
+                var li = document.createElement('li');
+                if (star) {
+                  li.appendChild(star.cloneNode(true));
+                }
+                var span = document.createElement('span');
+                span.textContent = feature;
+                li.appendChild(span);
+                list.appendChild(li);
+              });
+            }
+          }
+
+          /*
+           * The href is REBUILT from our own phone number and an encoded
+           * message. The sheet supplies the message text only, so it can never
+           * point this link at a different number or a different site.
+           */
+          var cta = card.querySelector('[data-field="cta"]');
+          if (cta && row.whatsapp_text) {
+            cta.href =
+              'https://wa.me/' +
+              phoneDigits +
+              '?text=' +
+              encodeURIComponent(row.whatsapp_text);
+          }
+
+          var title = card.querySelector('[data-field="title"]');
+          var price = card.querySelector('[data-field="price"]');
+          if (cta && title && price) {
+            cta.setAttribute(
+              'aria-label',
+              'WhatsApp about the ' +
+                title.textContent +
+                ' service at ' +
+                price.textContent,
+            );
+          }
+        }
+
+        var controller = new AbortController();
+        var timeout = setTimeout(function () {
+          controller.abort();
+        }, 6000);
+
+        fetch(csvUrl, { signal: controller.signal, credentials: 'omit' })
+          .then(function (res) {
+            if (!res.ok) throw new Error('HTTP ' + res.status);
+            return res.text();
+          })
+          .then(function (text) {
+            toObjects(parseCsv(text)).forEach(function (row) {
+              if (!row.id) return;
+              var card = grid.querySelector(
+                '[data-card-id="' + CSS.escape(row.id) + '"]',
+              );
+              if (card) applyRow(card, row);
+            });
+          })
+          .catch(function () {
+            /* Sheet unreachable, blocked or malformed: keep the built-in prices. */
+          })
+          .finally(function () {
+            clearTimeout(timeout);
+          });
+      })();
+    </script>
+  ) : null
+}
