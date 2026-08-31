@@ -12,8 +12,7 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
 import WhatsAppButton from '../../components/WhatsAppButton.astro';
 import Button from '../../components/Button.astro';
 import SectionHeading from '../../components/SectionHeading.astro';
-import PricingCard from '../../components/PricingCard.astro';
-import PartsCaveat from '../../components/PartsCaveat.astro';
+import PricingGrid from '../../components/PricingGrid.astro';
 import ServicingPlanSteps from '../../components/ServicingPlanSteps.astro';
 import RatingPill from '../../components/RatingPill.astro';
 import CtaBand from '../../components/CtaBand.astro';
@@ -49,12 +48,18 @@ const description = `Bicycle servicing prices in Bletchley, Milton Keynes: ${pri
         {pricing.headlineStatement}
       </p>
 
-      <ul role="list" class="mt-6 grid gap-4 md:grid-cols-3 md:gap-6">
-        {pricing.tiers.map((tier) => <PricingCard tier={tier} />)}
-      </ul>
+      {/*
+        4. The three tiers, plus the parts caveat which PricingGrid renders
+        itself so the two can never be separated.
 
-      {/* 4. Parts caveat, directly under the cards */}
-      <PartsCaveat class="mt-6" />
+        Prices are rendered from src/data/business.ts at build time and then
+        refreshed in the browser from the client's published Google Sheet, so a
+        price correction can go live without a redeploy. If the sheet is
+        unreachable the built-in prices stand. See the component header for the
+        JSON-LD caveat: after a lasting price change, update business.ts and
+        rebuild too.
+      */}
+      <PricingGrid class="mt-6" />
     </div>
   </section>
 

@@ -238,6 +238,18 @@ export interface PricingTier {
    * "Best value" — the brief supports neither claim (AGENTS.md 2.1).
    */
   readonly badge?: string;
+  /**
+   * The `id` this tier has in the client's published Google Sheet, which does
+   * NOT match `id` above. Kept as its own field so the live price update can
+   * match rows to cards explicitly instead of guessing by position: reordering
+   * the spreadsheet must never repoint a price at the wrong card.
+   */
+  readonly sheetId: string;
+  /**
+   * Pre-filled WhatsApp message for this tier's CTA, so the enquiry arrives
+   * saying which service it is about. Encoded at the call site, never here.
+   */
+  readonly whatsAppText: string;
 }
 
 export interface Pricing {
@@ -633,6 +645,9 @@ export const business: Business = {
         category: 'Junior',
         heading: 'Junior bike, single speed',
         summary: 'up to 20" wheel size, no gears',
+        sheetId: 'junior-single',
+        whatsAppText:
+          "Hi Jimmy, I'd like to book a service for a Junior Single Speed bike.",
       },
       {
         id: 'junior-geared',
@@ -645,6 +660,9 @@ export const business: Business = {
         category: 'Junior',
         heading: 'Junior bike with gears',
         summary: 'up to 24" wheel size, up to one set of gears',
+        sheetId: 'junior-gears',
+        whatsAppText:
+          "Hi Jimmy, I'd like to book a service for a Junior Bike with gears.",
       },
       {
         id: 'adult',
@@ -660,6 +678,9 @@ export const business: Business = {
         heading: 'Adult bike',
         summary: 'up to two sets of gears',
         badge: 'Adult bikes',
+        sheetId: 'adult',
+        whatsAppText:
+          "Hi Jimmy, I'd like to book a service for an Adult bike.",
       },
     ],
     includesNote:
