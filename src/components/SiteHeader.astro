@@ -45,7 +45,7 @@ const logotypeName = business.identity.shortName.toUpperCase();
 
       <div class="hidden items-center gap-6 md:flex">
         <nav aria-label="Primary">
-          <ul class="flex items-center gap-6">
+          <ul role="list" class="flex items-center gap-6">
             {
               NAV_ITEMS.map((item) => (
                 <li>
@@ -75,7 +75,7 @@ const logotypeName = business.identity.shortName.toUpperCase();
       <Icon name="close" size={24} class="icon-close" />
     </summary>
     <nav class="nav-panel" aria-label="Primary mobile">
-      <ul>
+      <ul role="list">
         {
           NAV_ITEMS.map((item) => (
             <li>

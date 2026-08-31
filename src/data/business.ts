@@ -98,6 +98,20 @@ export interface BusinessAddress {
   /** Opens the Google Maps directions/search card for the workshop. */
   readonly directionsUrl: string;
   /**
+   * `src` for the embedded map iframe on /contact/.
+   *
+   * This is the keyless `output=embed` form. The official Google Maps Embed
+   * API would need an API key, and a key in a static site is a public key, so
+   * the keyless form is the correct trade here. It is undocumented, so if the
+   * map ever goes blank this URL is the first thing to check: the address
+   * text is the only part that matters and it is derived from `formatted`.
+   *
+   * Loading this contacts Google and sets their cookies, so the map is behind
+   * an explicit opt-in on the page. `directionsUrl` above always works without
+   * it.
+   */
+  readonly mapEmbedUrl: string;
+  /**
    * Towns and areas the business serves. Used for `areaServed` in the JSON-LD
    * and for local-search copy.
    */
@@ -344,6 +358,14 @@ export interface Business {
 const PHONE_E164 = '+447399351272';
 
 /**
+ * The workshop address, written once. Both the human-readable line and the two
+ * Google Maps URLs derive from this, so the map can never point somewhere the
+ * address does not.
+ */
+const FORMATTED_ADDRESS =
+  'Unit 1, 75 Tavistock Street, Fenny Stratford, Bletchley, Milton Keynes, MK2 2PG';
+
+/**
  * The three published prices, in ascending order — the order they appear on the
  * client's own price card, and the order they must appear in on the site.
  * Declared once here so the numeral is written exactly once in this repository.
@@ -395,10 +417,13 @@ export const business: Business = {
     postcode: 'MK2 2PG',
     country: 'United Kingdom',
     countryCode: 'GB',
-    formatted:
-      'Unit 1, 75 Tavistock Street, Fenny Stratford, Bletchley, Milton Keynes, MK2 2PG',
-    directionsUrl:
-      'https://www.google.com/maps/search/?api=1&query=Unit+1,+75+Tavistock+Street,+Fenny+Stratford,+Milton+Keynes,+MK2+2PG',
+    formatted: FORMATTED_ADDRESS,
+    directionsUrl: `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(
+      FORMATTED_ADDRESS,
+    )}`,
+    mapEmbedUrl: `https://maps.google.com/maps?q=${encodeURIComponent(
+      FORMATTED_ADDRESS,
+    )}&z=15&hl=en&output=embed`,
     areaServed: ['Bletchley', 'Fenny Stratford', 'Milton Keynes'],
   },
 

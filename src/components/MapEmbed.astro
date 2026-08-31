@@ -1,0 +1,60 @@
+---
+/**
+ * MapEmbed.astro — the Google Maps embed for /contact/, behind an opt-in.
+ *
+ * Why a disclosure rather than a bare iframe:
+ *
+ * 1. Privacy. Loading the iframe contacts Google and sets their cookies. Every
+ *    other page on this site makes zero third-party requests, and for a UK
+ *    business an unattended third-party cookie is a consent question nobody
+ *    wants to answer. Behind a <details>, nothing is fetched until the visitor
+ *    asks for it.
+ * 2. Performance. An eager maps iframe is by far the heaviest thing on the
+ *    page and would dominate the contact page's load.
+ * 3. It still works with JavaScript disabled, because <details> is native.
+ *
+ * The address, the postcode and the "Get directions" link are always visible
+ * above this, so the map is an extra, never the only way to find the workshop.
+ *
+ * Accessibility notes, all of which the usual copy-pasted embed snippet gets
+ * wrong:
+ * - The iframe has a `title`. Without one a screen reader announces an unnamed
+ *   "frame" and the user has no idea what is inside it (WCAG 4.1.2).
+ * - No `frameborder`, `scrolling`, `marginwidth` or `marginheight`. All four
+ *   were removed in HTML5; the styling is done in CSS instead.
+ * - The frame is keyboard reachable and scrollable, and it is sized with
+ *   aspect-ratio so it reflows rather than forcing a fixed 400px box.
+ */
+import { business } from '../data/business';
+
+interface Props {
+  class?: string;
+}
+
+const { class: className } = Astro.props;
+const { address } = business;
+---
+
+<details class={`map-embed ${className ?? ''}`}>
+  <summary class="map-embed__summary">
+    <span class="map-embed__summary-label">Show the map</span>
+    <span class="map-embed__summary-note">
+      Loads Google Maps, which sets Google's cookies
+    </span>
+  </summary>
+
+  <div class="map-embed__frame">
+    <iframe
+      class="map-embed__iframe"
+      title={`Google Maps showing the workshop at ${address.formatted}`}
+      src={address.mapEmbedUrl}
+      loading="lazy"
+      referrerpolicy="no-referrer-when-downgrade"></iframe>
+  </div>
+
+  <p class="map-embed__fallback">
+    If the map does not load, <a href={address.directionsUrl} target="_blank" rel="noopener noreferrer"
+      >open {address.postcode} in Google Maps<span class="sr-only-text"> (opens in a new tab)</span></a
+    >.
+  </p>
+</details>
