@@ -21,14 +21,35 @@ interface Props {
    * text already states the rating in full.
    */
   labelled?: boolean;
+  /**
+   * Score for ONE item, e.g. a single real Google review, rather than the
+   * business aggregate. Omit for the aggregate, which is the default and what
+   * every trust signal on the site uses.
+   *
+   * This exists because real reviews arrive with their own ratings: a genuine
+   * 4-star review must not be drawn with five stars. Only the stars actually
+   * earned are drawn — there are still no empty or half stars anywhere on the
+   * site (docs/DESIGN_SYSTEM.md 4.10) — and the hidden label states the score
+   * out of `bestRating` so the count is never ambiguous.
+   */
+  rating?: number;
   class?: string;
 }
 
-const { tone = 'light', size = 20, labelled = true, class: className } = Astro.props;
+const {
+  tone = 'light',
+  size = 20,
+  labelled = true,
+  rating,
+  class: className,
+} = Astro.props;
 
 const { aggregate } = business.reviews;
-const stars = Math.round(aggregate.ratingValue);
-const label = `Rated ${aggregate.ratingValue.toFixed(1)} out of ${aggregate.bestRating} from ${aggregate.reviewCount} ${aggregate.sourceLabel} reviews`;
+const isSingleReview = rating !== undefined;
+const stars = Math.round(isSingleReview ? rating : aggregate.ratingValue);
+const label = isSingleReview
+  ? `Rated ${stars} out of ${aggregate.bestRating}`
+  : `Rated ${aggregate.ratingValue.toFixed(1)} out of ${aggregate.bestRating} from ${aggregate.reviewCount} ${aggregate.sourceLabel} reviews`;
 
 const classes = [
   'inline-flex items-center gap-1',

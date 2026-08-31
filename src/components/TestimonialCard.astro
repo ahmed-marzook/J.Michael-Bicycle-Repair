@@ -6,8 +6,20 @@
  * `isPlaceholder`. This component switches on it, so a placeholder can never
  * be rendered as though it were a genuine customer quote: the attribution is
  * rewritten and the card is visibly marked.
+ *
+ * The verified branch renders a real Google review fetched at build time by
+ * src/lib/featurable-reviews.ts, and exists to satisfy Google's display
+ * requirements: the reviewer's name exactly as given, the review text
+ * unedited, and a link back to the reviews on Google.
+ *
+ * The avatar is an initials circle drawn from the reviewer's own name, never
+ * their Google-hosted profile photo. Rendering that photo would mean either a
+ * third-party request from the visitor's browser — which this site otherwise
+ * never makes — or a build-time download of a URL that rotates and expires and
+ * can fail the build. See the header of src/lib/featurable-reviews.ts.
  */
 import StarRating from './StarRating.astro';
+import Icon from './Icon.astro';
 import type { Testimonial } from '../data/business';
 
 interface Props {
@@ -16,6 +28,20 @@ interface Props {
 
 const { testimonial } = Astro.props;
 
+/**
+ * Up to two initials from the reviewer's display name. Purely decorative: the
+ * name itself is always shown as text beside it, and the circle is
+ * `aria-hidden`, so a screen reader hears the name once and not its letters.
+ * Spread into code points so an accented or non-Latin initial is not split.
+ */
+const initialsOf = (name: string): string =>
+  name
+    .split(/\s+/)
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((part) => [...part][0]?.toUpperCase() ?? '')
+    .join('') || '★';
+
 // The discriminated union, switched on exactly once, here.
 const attribution = testimonial.isPlaceholder
   ? `Placeholder review, to be replaced with a real Google review — ${testimonial.attribution}`
@@ -23,9 +49,62 @@ const attribution = testimonial.isPlaceholder
 ---
 
 <figure class="quote-card flex h-full flex-col">
-  <StarRating tone="light" size={20} />
+  {/*
+    A real review carries its own score, so the card draws that and not the
+    5.0 business aggregate — a genuine 4-star review must not be shown as
+    five stars. Placeholders keep the aggregate treatment unchanged.
+  */}
+  {
+    testimonial.isPlaceholder ? (
+      <StarRating tone="light" size={20} />
+    ) : (
+      <StarRating tone="light" size={20} rating={testimonial.rating} />
+    )
+  }
   <blockquote class="mt-3">
+    {/* Unedited and untruncated: Google's display terms forbid altering it. */}
     <p>{testimonial.quote}</p>
   </blockquote>
-  <figcaption class="mt-4 text-caption text-muted">{attribution}</figcaption>
+
+  {
+    testimonial.isPlaceholder ? (
+      <figcaption class="mt-4 text-caption text-muted">{attribution}</figcaption>
+    ) : (
+      <figcaption class="mt-4 flex items-center gap-3">
+        <span
+          aria-hidden="true"
+          class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-surface-subtle text-caption font-bold text-brand-700"
+        >
+          {initialsOf(testimonial.authorName)}
+        </span>
+
+        <span class="min-w-0">
+          <span class="block text-caption font-bold">{testimonial.authorName}</span>
+          <span class="block text-caption text-muted">
+            {testimonial.publishedLabel && testimonial.publishedIso ? (
+              <time datetime={testimonial.publishedIso}>
+                {testimonial.publishedLabel}
+              </time>
+            ) : testimonial.publishedLabel ? (
+              <span>{testimonial.publishedLabel}</span>
+            ) : null}
+            {testimonial.publishedLabel ? <span aria-hidden="true"> · </span> : null}
+            <a
+              class="link inline-flex items-center gap-1 align-middle"
+              href={testimonial.reviewUrl}
+              target="_blank"
+              rel="noopener noreferrer nofollow"
+            >
+              on Google
+              <Icon name="external" size={14} />
+              <span class="sr-only-text">
+                — read the reviews by {testimonial.authorName} and others on Google
+                (opens in a new tab)
+              </span>
+            </a>
+          </span>
+        </span>
+      </figcaption>
+    )
+  }
 </figure>

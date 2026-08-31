@@ -28,14 +28,23 @@ import Icon from '../components/Icon.astro';
 // TODO(client): replace with a real photograph of Jimmy at the stand working
 // on a bike in the workshop.
 import HeroWorkshop from '../assets/hero-workshop.svg';
-// TODO(client): this one stays an illustration — it must never be made to look
-// like a real street map.
-import LocationCard from '../assets/location-card.svg';
+import MapEmbed from '../components/MapEmbed.astro';
 
 import { business } from '../data/business';
+import { loadTestimonials } from '../lib/featurable-reviews';
 
 const { identity, contact, address, pricing, reviews, servicingPlan, services } =
   business;
+
+/**
+ * Real Google reviews, fetched once at build time and baked into this HTML.
+ * Never throws and never fails the build: with no `FEATURABLE_WIDGET_ID`, or
+ * offline, or on any API error, this resolves to the placeholder testimonials
+ * from src/data/business.ts and logs one warning line. See
+ * src/lib/featurable-reviews.ts.
+ */
+const testimonialSet = await loadTestimonials();
+const showingRealReviews = testimonialSet.source === 'google';
 
 /** Six services for the overview grid; /services/ carries all thirteen. */
 const featuredServices = services.slice(0, 6);
@@ -245,14 +254,18 @@ const description = `Bicycle repairs and servicing in Bletchley, Milton Keynes. 
     <div class="container-page">
       <SectionHeading
         starRule
-        eyebrow="What people say"
+        eyebrow={showingRealReviews ? reviews.verifiedAttribution : 'What people say'}
         heading={`Rated ${reviews.aggregate.ratingValue.toFixed(1)} from ${reviews.aggregate.reviewCount} reviews on ${reviews.aggregate.sourceLabel}`}
-        lead={reviews.placeholderDisclaimer}
+        lead={
+          showingRealReviews
+            ? reviews.verifiedDisclaimer
+            : reviews.placeholderDisclaimer
+        }
       />
 
       <ul role="list" class="mt-8 grid gap-4 md:mt-10 md:grid-cols-3 md:gap-6">
         {
-          reviews.testimonials.slice(0, 3).map((testimonial, index) => (
+          testimonialSet.testimonials.slice(0, 3).map((testimonial, index) => (
             <li class:list={[index === 2 ? 'hidden md:block' : null]}>
               <TestimonialCard testimonial={testimonial} />
             </li>
@@ -290,12 +303,12 @@ const description = `Bicycle repairs and servicing in Bletchley, Milton Keynes. 
         <HoursBlock class="mt-8" />
       </div>
 
-      <div class="illustration">
-        <LocationCard
-          role="img"
-          aria-label={`Illustration of a location pin marking the workshop in ${address.dependentLocality}, ${address.locality}`}
-        />
-      </div>
+      {/*
+        Same opt-in map as /contact/. Nothing is fetched from Google until the
+        visitor opens it, so the home page keeps making zero third-party
+        requests on load. The address and directions button above always work.
+      */}
+      <MapEmbed />
     </div>
   </section>
 

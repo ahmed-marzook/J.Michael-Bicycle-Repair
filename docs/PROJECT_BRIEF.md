@@ -151,11 +151,57 @@ servicing plan, pricing tiers, reviews). Every page and the JSON-LD reads from
 it. Nothing hard-codes a phone number or a price in markup. When Jimmy's details
 change, one file changes.
 
-Google reviews: the Places API needs a key and a server, which this static site
-will not have. Ship a small set of **clearly-labelled placeholder testimonials**
-in `business.ts` marked `TODO(client): replace with real review text`, plus the
-real aggregate (5.0 stars, 85 reviews) and a prominent link out to the live
-Google listing. Do not fabricate quotes attributed to named real people.
+### Google reviews — must be real, not hardcoded
+
+The site must show **real Google reviews**, pulled from Google rather than typed
+into the repo. The placeholder testimonials currently in `business.ts` are a
+stopgap and must be replaced by a live source.
+
+Approach: **fetch at build time from Featurable, bake into static HTML.** The
+build calls the Featurable API, maps the result onto the existing
+`VerifiedTestimonial` type and renders it as plain HTML. This keeps the site
+zero-JS, adds no third-party request or cookie for visitors, and cannot slow
+the page down.
+
+Why Featurable over the two obvious alternatives (client decision):
+
+- **Google Places API** caps at 5 reviews, chosen by Google, and needs a
+  billable Google Cloud key. Featurable is free for unlimited page views and
+  returns more than 5.
+- **Elfsight** (a widget the client already configured) shows the full review
+  wall but injects third-party JavaScript and cookies, keeps the review text
+  out of the HTML so search engines never see it, and its free tier stops at
+  200 widget views per month, which would make reviews vanish mid-month on a
+  site whose whole purpose is being found.
+
+Rules for the implementation:
+
+- **The build must never break because of it.** No key, no network, an API
+  error or a rate limit must all fall back to the existing placeholders and
+  emit a warning. A failed fetch is not a failed build.
+- Credentials come from environment variables and are used **only at build
+  time**. They must never reach `dist/`. Committing one is a security incident.
+- Reviews are refreshed by re-running the build, so the site needs a periodic
+  rebuild, not a one-off fetch, to stay current.
+- Respect Google's display requirements: show the reviewer's name as given, do
+  not edit review text, and attribute the reviews to Google.
+- **Do not fetch or hotlink reviewer profile photos.** Those URLs expire, and a
+  dead one must never be able to fail the build; hotlinking them would also put
+  a third-party request back on the page. Render initials in a circle instead.
+- Cap what renders at a sensible number and word it honestly as a selection,
+  never implying the page shows all 85.
+- Keep the real aggregate (5.0 stars, 85 reviews) and the prominent link out to
+  the live Google listing regardless of whether the fetch succeeded.
+- Never fabricate a quote or attribute one to a named real person.
+
+Needed from the client: a free Featurable account with the Google Business
+listing connected, and the resulting widget ID. `TODO(client)` until supplied.
+
+If the Featurable route ever proves impractical, the fallback order is: Google
+Places API at build time (5 reviews, needs a billable key), then a client-side
+widget as a last resort. A widget is last because it injects JavaScript, makes
+third-party requests and sets cookies on the visitor's browser, which this site
+otherwise avoids entirely.
 
 ## 10. Out of scope for now
 

@@ -2,16 +2,15 @@
 /**
  * MapEmbed.astro — the Google Maps embed for /contact/, behind an opt-in.
  *
- * Why a disclosure rather than a bare iframe:
+ * The map is OPEN by default, by the client's decision: seeing where the
+ * workshop is matters more here than the cost of the embed. That cost is real
+ * and worth knowing about: an open iframe contacts Google on page load and
+ * sets Google's cookies, so the home page and /contact/ are the only two pages
+ * on this site that make a third-party request.
  *
- * 1. Privacy. Loading the iframe contacts Google and sets their cookies. Every
- *    other page on this site makes zero third-party requests, and for a UK
- *    business an unattended third-party cookie is a consent question nobody
- *    wants to answer. Behind a <details>, nothing is fetched until the visitor
- *    asks for it.
- * 2. Performance. An eager maps iframe is by far the heaviest thing on the
- *    page and would dominate the contact page's load.
- * 3. It still works with JavaScript disabled, because <details> is native.
+ * It stays a <details> rather than a bare iframe so a visitor can collapse it,
+ * and because <details> is native, that still works with JavaScript disabled.
+ * `loading="lazy"` keeps it from blocking anything above it.
  *
  * The address, the postcode and the "Get directions" link are always visible
  * above this, so the map is an extra, never the only way to find the workshop.
@@ -35,11 +34,11 @@ const { class: className } = Astro.props;
 const { address } = business;
 ---
 
-<details class={`map-embed ${className ?? ''}`}>
+<details class={`map-embed ${className ?? ''}`} open>
   <summary class="map-embed__summary">
-    <span class="map-embed__summary-label">Show the map</span>
+    <span class="map-embed__summary-label">Map of the workshop</span>
     <span class="map-embed__summary-note">
-      Loads Google Maps, which sets Google's cookies
+      Shown by Google Maps. Select to collapse.
     </span>
   </summary>
 
