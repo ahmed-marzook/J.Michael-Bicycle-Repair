@@ -6,17 +6,26 @@
  * from the file system, so this list and the sitemap cannot disagree about
  * which pages exist — but keep them in step when a route is added.
  */
+
+// import.meta.env.BASE_URL resolves to '/J.Michael-Bicycle-Repair/' (or '/' locally/custom domain)
+const base = import.meta.env.BASE_URL.replace(/\/+$/, "");
+
+const resolveHref = (path: string): string => {
+  if (path === "/") return `${base}/` || "/";
+  return `${base}${path}`;
+};
+
 export interface NavItem {
   readonly href: string;
   readonly label: string;
 }
 
 export const NAV_ITEMS: readonly NavItem[] = [
-  { href: '/', label: 'Home' },
-  { href: '/services/', label: 'Services' },
-  { href: '/pricing/', label: 'Pricing' },
-  { href: '/about/', label: 'About' },
-  { href: '/contact/', label: 'Contact' },
+  { href: resolveHref("/"), label: "Home" },
+  { href: resolveHref("/services/"), label: "Services" },
+  { href: resolveHref("/pricing/"), label: "Pricing" },
+  { href: resolveHref("/about/"), label: "About" },
+  { href: resolveHref("/contact/"), label: "Contact" },
 ];
 
 /**
@@ -25,6 +34,6 @@ export const NAV_ITEMS: readonly NavItem[] = [
  */
 export function isCurrentRoute(href: string, pathname: string): boolean {
   const normalise = (value: string): string =>
-    value.length > 1 ? value.replace(/\/+$/, '') : value;
+    value.length > 1 ? value.replace(/\/+$/, "") : value;
   return normalise(href) === normalise(pathname);
 }
