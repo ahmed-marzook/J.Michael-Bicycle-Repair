@@ -317,12 +317,26 @@ const waHref = (text: string): string =>
           }
         }
 
+        /*
+         * Google caches the published CSV for five minutes
+         * (Cache-Control: private, max-age=300), so without a unique
+         * parameter a visitor can be handed a copy from before the client's
+         * last edit. Google ignores unknown parameters.
+         */
+        function bustCache(url) {
+          return url + (url.indexOf('?') === -1 ? '?' : '&') + '_=' + Date.now();
+        }
+
         var controller = new AbortController();
         var timeout = setTimeout(function () {
           controller.abort();
         }, 6000);
 
-        fetch(csvUrl, { signal: controller.signal, credentials: 'omit' })
+        fetch(bustCache(csvUrl), {
+            signal: controller.signal,
+            credentials: 'omit',
+            cache: 'no-store',
+          })
           .then(function (res) {
             if (!res.ok) throw new Error('HTTP ' + res.status);
             return res.text();

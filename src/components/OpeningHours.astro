@@ -1,0 +1,413 @@
+---
+/**
+ * OpeningHours.astro — the weekly timetable, the live status badge and the
+ * client's announcement notice.
+ *
+ * HOW IT WORKS
+ *
+ * 1. Build time: the whole table is rendered from the published Google Sheet
+ *    (src/lib/hours-sheet.ts). The schedule is real HTML, so it is indexable,
+ *    correct with JavaScript off, and correct when Sheets is down.
+ * 2. Browser: one fetch re-reads the sheet so a "fully booked today" set an
+ *    hour ago shows without a redeploy, and computes the open/closed badge
+ *    against the current time.
+ *
+ * WHY THE BADGE IS NOT RENDERED STATICALLY
+ *
+ * "Open now" is true for about eight hours a day. Baked into static HTML it
+ * would be a lie for the other sixteen, and a customer who rides across
+ * Bletchley to a shut workshop is a worse outcome than a customer who checks
+ * the timetable. So the badge starts in a neutral state that is true at any
+ * hour, and only becomes OPEN / BUSY / CLOSED once JavaScript has computed it
+ * against the real clock. Its box is reserved either way, so nothing shifts.
+ *
+ * TIME ZONE
+ *
+ * All comparisons run in Europe/London via Intl, never in the visitor's local
+ * time. Someone checking from Spain at 18:00 is looking at a workshop where it
+ * is 17:00; `new Date().getHours()` would tell them the wrong thing.
+ *
+ * COLOUR
+ *
+ * The brief's example classes (emerald / amber) are not used: this site has
+ * its own palette whose contrast ratios were computed and verified, and
+ * dropping raw Tailwind hues in would both go off-brand and bypass that work.
+ * Open uses the brand green, busy the gold accent, closed the muted neutral.
+ */
+import { business } from '../data/business';
+import { loadHours, HOURS_CSV_URL, BUSINESS_TIME_ZONE } from '../lib/hours-sheet';
+
+interface Props {
+  /** Pass an empty string to render the timetable with no live update. */
+  csvUrl?: string;
+  class?: string;
+}
+
+const { csvUrl = HOURS_CSV_URL, class: className } = Astro.props;
+const { identity, contact } = business;
+
+const { rows, announcement, statusOverride } = await loadHours();
+
+/*
+ * With no timetable at all (sheet unreachable AND hours still unknown in
+ * business.ts) there is nothing honest to tabulate, so fall back to the
+ * client's own wording about ringing him.
+ */
+const hasSchedule = rows.length > 0;
+---
+
+<div class={className} data-opening-hours data-csv-url={csvUrl} data-tz={BUSINESS_TIME_ZONE}>
+  {/* Status badge. Neutral until JS computes it — see the header comment. */}
+  <p class="hours-status" data-hours-status data-override={statusOverride}>
+    <span class="hours-status__dot" aria-hidden="true"></span>
+    <span data-hours-status-text>Check today's hours below</span>
+  </p>
+
+  {/*
+    Announcement. Rendered only when there is one; the live script can fill and
+    reveal it, so the element exists either way. `hidden` keeps it out of the
+    accessibility tree while empty rather than announcing a blank notice.
+  */}
+  <p class="hours-announcement" data-hours-announcement hidden={!announcement}>
+    {announcement}
+  </p>
+
+  {
+    hasSchedule ? (
+      <table class="hours-table mt-5">
+        <caption class="sr-only-text">
+          Opening hours for {identity.spokenName}, all times UK time
+        </caption>
+        <thead>
+          <tr>
+            <th scope="col">Day</th>
+            <th scope="col">Hours</th>
+            <th scope="col">Notes</th>
+          </tr>
+        </thead>
+        <tbody>
+          {rows.map((row) => (
+            <tr data-day={row.day} class:list={[row.isClosed ? 'is-closed' : null]}>
+              <th scope="row">
+                {row.label}
+                {/*
+                  The "Today" pill is added by the script. Which day is today
+                  cannot be known at build time — the page may be served for
+                  weeks — so marking one row here would be wrong six days out
+                  of seven.
+                */}
+              </th>
+              <td data-hours-cell>{row.display}</td>
+              <td data-note-cell>{row.note}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    ) : (
+      <p class="mt-4">{contact.contactNote}</p>
+    )
+  }
+</div>
+
+{
+  csvUrl ? (
+    <script is:inline define:vars={{ csvUrl, timeZone: BUSINESS_TIME_ZONE }}>
+      (function () {
+        var root = document.querySelector('[data-opening-hours]');
+        if (!root) return;
+
+        var WEEK = [
+          'sunday',
+          'monday',
+          'tuesday',
+          'wednesday',
+          'thursday',
+          'friday',
+          'saturday',
+        ];
+
+        /* ---- CSV (same grammar as src/lib/csv.ts) ------------------------ */
+        function parseCsv(text) {
+          var rows = [];
+          var row = [];
+          var field = '';
+          var inQuotes = false;
+
+          function endRow() {
+            row.push(field);
+            field = '';
+            if (row.length > 1 || row[0] !== '') rows.push(row);
+            row = [];
+          }
+
+          for (var i = 0; i < text.length; i++) {
+            var ch = text[i];
+            if (inQuotes) {
+              if (ch === '"') {
+                if (text[i + 1] === '"') {
+                  field += '"';
+                  i++;
+                } else {
+                  inQuotes = false;
+                }
+              } else {
+                field += ch;
+              }
+              continue;
+            }
+            if (ch === '"') inQuotes = true;
+            else if (ch === ',') {
+              row.push(field);
+              field = '';
+            } else if (ch === '\n' || ch === '\r') {
+              if (ch === '\r' && text[i + 1] === '\n') i++;
+              endRow();
+            } else field += ch;
+          }
+          endRow();
+          return rows;
+        }
+
+        function toObjects(rows) {
+          if (rows.length < 2) return [];
+          var keys = rows[0].map(function (k) {
+            return k.trim().toLowerCase();
+          });
+          return rows.slice(1).map(function (cells) {
+            var obj = {};
+            for (var i = 0; i < keys.length; i++) obj[keys[i]] = (cells[i] || '').trim();
+            return obj;
+          });
+        }
+
+        /* ---- The workshop's clock, not the visitor's -------------------- */
+        function nowInBusinessZone() {
+          var parts = new Intl.DateTimeFormat('en-GB', {
+            timeZone: timeZone,
+            weekday: 'long',
+            hour: '2-digit',
+            minute: '2-digit',
+            hour12: false,
+          }).formatToParts(new Date());
+
+          var out = { weekday: '', hour: 0, minute: 0 };
+          parts.forEach(function (part) {
+            if (part.type === 'weekday') out.weekday = part.value.toLowerCase();
+            else if (part.type === 'hour') out.hour = parseInt(part.value, 10);
+            else if (part.type === 'minute') out.minute = parseInt(part.value, 10);
+          });
+          return out;
+        }
+
+        function minutesOf(time) {
+          var m = /^([01]?\d|2[0-3]):([0-5]\d)$/.exec((time || '').trim());
+          if (!m) return null;
+          return parseInt(m[1], 10) * 60 + parseInt(m[2], 10);
+        }
+
+        function isTruthy(value) {
+          return /^(true|yes|y|1)$/i.test((value || '').trim());
+        }
+
+        function formatTime(time) {
+          var mins = minutesOf(time);
+          if (mins === null) return '';
+          var h = Math.floor(mins / 60);
+          var m = mins % 60;
+          var suffix = h < 12 ? 'am' : 'pm';
+          var h12 = h % 12 === 0 ? 12 : h % 12;
+          return m === 0 ? h12 + suffix : h12 + ':' + (m < 10 ? '0' + m : m) + suffix;
+        }
+
+        /* ---- Status ------------------------------------------------------ */
+        var STATUS = {
+          open: { text: 'Open now — in the workshop', cls: 'is-open' },
+          busy: { text: 'Fully booked today', cls: 'is-busy' },
+          closed: { text: 'Closed', cls: 'is-closed' },
+        };
+
+        function computeStatus(byDay, now) {
+          var today = byDay[now.weekday];
+          if (!today || today.closed) return 'closed';
+          var opens = minutesOf(today.open);
+          var closes = minutesOf(today.close);
+          if (opens === null || closes === null) return 'closed';
+          var minutes = now.hour * 60 + now.minute;
+          return minutes >= opens && minutes < closes ? 'open' : 'closed';
+        }
+
+        function applyStatus(key) {
+          var el = root.querySelector('[data-hours-status]');
+          var text = root.querySelector('[data-hours-status-text]');
+          var status = STATUS[key];
+          if (!el || !text || !status) return;
+          el.classList.remove('is-open', 'is-busy', 'is-closed');
+          el.classList.add(status.cls);
+          text.textContent = status.text;
+        }
+
+        function markToday(weekday) {
+          var rows = root.querySelectorAll('tbody tr');
+          Array.prototype.forEach.call(rows, function (tr) {
+            var isToday = tr.getAttribute('data-day') === weekday;
+            tr.classList.toggle('is-today', isToday);
+
+            var cell = tr.querySelector('th[scope="row"]');
+            if (!cell) return;
+            var pill = cell.querySelector('.today-pill');
+
+            if (isToday && !pill) {
+              pill = document.createElement('span');
+              pill.className = 'today-pill';
+              pill.textContent = 'Today';
+              cell.appendChild(pill);
+            } else if (!isToday && pill) {
+              pill.remove();
+            }
+          });
+        }
+
+        /*
+         * Today's highlight and the badge depend only on the clock, so do them
+         * immediately. The fetch below refines the data but must not delay
+         * this: if the network is slow or blocked the visitor still gets a
+         * correct badge from the build-time timetable.
+         */
+        var now = nowInBusinessZone();
+        markToday(now.weekday);
+
+        function readStaticSchedule() {
+          var byDay = {};
+          Array.prototype.forEach.call(root.querySelectorAll('tbody tr'), function (tr) {
+            var day = tr.getAttribute('data-day');
+            var cell = tr.querySelector('[data-hours-cell]');
+            if (!day || !cell) return;
+            var text = cell.textContent || '';
+            var closed = /closed/i.test(text);
+            // "8:30am – 5:30pm" -> back to 24h for comparison.
+            var times = text.match(/(\d{1,2})(?::(\d{2}))?\s*(am|pm)/gi) || [];
+            function to24(token) {
+              var m = /(\d{1,2})(?::(\d{2}))?\s*(am|pm)/i.exec(token);
+              if (!m) return null;
+              var h = parseInt(m[1], 10) % 12;
+              if (/pm/i.test(m[3])) h += 12;
+              return h + ':' + (m[2] || '00');
+            }
+            byDay[day] = {
+              closed: closed || times.length < 2,
+              open: times[0] ? to24(times[0]) : null,
+              close: times[1] ? to24(times[1]) : null,
+            };
+          });
+          return byDay;
+        }
+
+        var overrideAttr = (
+          root.querySelector('[data-hours-status]') || {}
+        ).getAttribute
+          ? root.querySelector('[data-hours-status]').getAttribute('data-override')
+          : 'auto';
+
+        function decide(byDay, override) {
+          if (override && override !== 'auto' && STATUS[override]) return override;
+          return computeStatus(byDay, nowInBusinessZone());
+        }
+
+        applyStatus(decide(readStaticSchedule(), overrideAttr));
+
+        /* ---- Live refresh ------------------------------------------------ */
+        if (!csvUrl) return;
+
+        /*
+         * Google caches the published CSV for five minutes
+         * (Cache-Control: private, max-age=300), so without a unique
+         * parameter a visitor can be handed a copy from before the client's
+         * last edit. Google ignores unknown parameters.
+         */
+        function bustCache(url) {
+          return url + (url.indexOf('?') === -1 ? '?' : '&') + '_=' + Date.now();
+        }
+
+        var controller = new AbortController();
+        var timer = setTimeout(function () {
+          controller.abort();
+        }, 6000);
+
+        fetch(bustCache(csvUrl), {
+            signal: controller.signal,
+            credentials: 'omit',
+            cache: 'no-store',
+          })
+          .then(function (res) {
+            if (!res.ok) throw new Error('HTTP ' + res.status);
+            return res.text();
+          })
+          .then(function (text) {
+            var rows = toObjects(parseCsv(text));
+            if (!rows.length) return;
+
+            var byDay = {};
+            var override = '';
+            var announcement = '';
+
+            rows.forEach(function (row) {
+              if (!override && row.status_override) override = row.status_override.toLowerCase();
+              if (!announcement && row.custom_announcement) {
+                announcement = row.custom_announcement;
+              }
+
+              var day = (row.day || '').toLowerCase();
+              if (WEEK.indexOf(day) === -1) return;
+
+              var closed = isTruthy(row.is_closed);
+              var opens = minutesOf(row.open_time);
+              var closes = minutesOf(row.close_time);
+              var unusable = !closed && (opens === null || closes === null);
+
+              byDay[day] = {
+                closed: closed || unusable,
+                open: row.open_time,
+                close: row.close_time,
+              };
+
+              var tr = root.querySelector('tbody tr[data-day="' + day + '"]');
+              if (!tr) return;
+
+              var hoursCell = tr.querySelector('[data-hours-cell]');
+              if (hoursCell) {
+                hoursCell.textContent =
+                  closed || unusable
+                    ? 'Closed'
+                    : formatTime(row.open_time) + ' – ' + formatTime(row.close_time);
+              }
+
+              var noteCell = tr.querySelector('[data-note-cell]');
+              if (noteCell) noteCell.textContent = row.note || '';
+
+              tr.classList.toggle('is-closed', closed || unusable);
+            });
+
+            var box = root.querySelector('[data-hours-announcement]');
+            if (box) {
+              if (announcement) {
+                box.textContent = announcement;
+                box.hidden = false;
+              } else {
+                box.hidden = true;
+              }
+            }
+
+            var fresh = nowInBusinessZone();
+            markToday(fresh.weekday);
+            applyStatus(decide(byDay, override));
+          })
+          .catch(function () {
+            /* Keep the build-time timetable and the clock-derived badge. */
+          })
+          .finally(function () {
+            clearTimeout(timer);
+          });
+      })();
+    </script>
+  ) : null
+}

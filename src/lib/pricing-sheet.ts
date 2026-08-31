@@ -125,6 +125,17 @@ function fallback(reason: string): PricingResult {
   return { tiers, source: 'fallback', ...derive(tiers) };
 }
 
+/**
+ * Google serves the published CSV with `Cache-Control: private, max-age=300`,
+ * so a plain fetch can hand back a copy up to five minutes old. After the
+ * client re-publishes the sheet that reads as "the site did not update". A
+ * unique query parameter makes every request a cache miss; Google ignores
+ * unknown parameters and still returns the CSV.
+ */
+function withCacheBuster(url: string): string {
+  return `${url}${url.includes('?') ? '&' : '?'}_=${Date.now()}`;
+}
+
 let cached: Promise<PricingResult> | null = null;
 
 /**
@@ -143,9 +154,10 @@ async function load(): Promise<PricingResult> {
   const timer = setTimeout(() => controller.abort(), FETCH_TIMEOUT_MS);
 
   try {
-    const response = await fetch(PRICING_CSV_URL, {
+    const response = await fetch(withCacheBuster(PRICING_CSV_URL), {
       signal: controller.signal,
       redirect: 'follow',
+      cache: 'no-store',
     });
 
     if (!response.ok) {
