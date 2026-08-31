@@ -26,7 +26,11 @@ on WhatsApp.** Every design and code decision is judged against that.
    `src/data/business.ts`. Never hard-code a phone number, price, or URL in a
    component or a page. If you need a new fact, add it to the typed model.
 3. **Static only.** No SSR adapter, no server routes, no runtime env vars, no
-   build-time network calls. `npm run build` must succeed offline.
+   runtime config. `npm run build` must succeed **offline**. The one build-time
+   network call is the Featurable reviews fetch (brief section 9), and it is
+   written so that offline, unconfigured or failing all fall back to the
+   placeholder testimonials and still exit 0. Any future fetch must meet the
+   same bar: a network problem may never fail the build.
 4. **Placeholder images only.** Local SVGs under `src/assets/`. No remote
    placeholder services. Real `alt` text, and a `TODO(client)` comment naming the
    photo that should replace it.
@@ -203,7 +207,29 @@ uncommitted; never checkpoint a broken tree.
 Track these here; do not guess answers.
 
 - Opening hours / days.
-- Real photos: shopfront, Jimmy at work, before-and-after repairs.
+- **Real photos.** Every image on the site is a placeholder SVG. Jimmy should
+  send the originals directly (WhatsApp or email), NOT have them pulled off
+  Facebook: Facebook re-compresses uploads heavily, its CDN links are signed
+  and expire, scraping breaks its terms, and photos on the page may include
+  identifiable customers or images someone else took and posted. Originals from
+  Jimmy settle both the quality and the permission question at once.
+
+  Shot list, matching the placeholders they replace. Landscape unless stated,
+  shot on a phone in daylight is fine:
+
+  | Replaces | Shot | Ratio |
+  | --- | --- | --- |
+  | `hero-workshop.svg` | Jimmy at the stand working on a bike | 4:3 |
+  | `portrait-jimmy.svg` | Head and shoulders of Jimmy, square crop | 1:1 |
+  | `shopfront.svg` | The unit frontage on Tavistock Street, sign visible | 3:2 |
+  | `service-wheel.svg` | A wheel in the truing jig, close up | 3:2 |
+  | `service-drivetrain.svg` | A cleaned chain and cassette, close up | 3:2 |
+  | `og-default.svg` | The one image for Facebook/WhatsApp link previews | 1200x630 |
+
+  Ask Jimmy to confirm he took them and is happy for them to be published, and
+  to avoid shots with customers' faces or readable number plates. A few
+  before-and-after repair pairs would also be genuinely persuasive if he has
+  them.
 - Exact qualifications and years in the trade, for the About page.
 - Whether to publish the workshop address or keep it appointment-only.
 - Preferred domain name.

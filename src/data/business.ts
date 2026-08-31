@@ -106,9 +106,10 @@ export interface BusinessAddress {
    * map ever goes blank this URL is the first thing to check: the address
    * text is the only part that matters and it is derived from `formatted`.
    *
-   * Loading this contacts Google and sets their cookies, so the map is behind
-   * an explicit opt-in on the page. `directionsUrl` above always works without
-   * it.
+   * Loading this contacts Google and sets their cookies. The map renders open
+   * by default (the client's decision), so the home page and /contact/ are the
+   * only two pages that make a third-party request. `directionsUrl` above
+   * always works without it.
    */
   readonly mapEmbedUrl: string;
   /**
@@ -261,10 +262,16 @@ export interface Pricing {
  * Reviews
  *
  * The aggregate is REAL and verified from the client's Google listing.
- * The individual testimonials are NOT — the Places API needs a key and a
- * server, which a static site does not have. They are typed as a discriminated
- * union on `isPlaceholder` so a template physically cannot render a fake quote
- * without being able to see that it is fake.
+ *
+ * The individual testimonials in this file are NOT real. They are the fallback.
+ * Real Google reviews are fetched at build time by
+ * src/lib/featurable-reviews.ts and rendered as `VerifiedTestimonial`s; the
+ * entries below are shown only when that fetch cannot run or fails, which
+ * keeps the build working with no credentials and offline.
+ *
+ * Both kinds are one discriminated union on `isPlaceholder`, so a template
+ * physically cannot render a fake quote without being able to see that it is
+ * fake.
  * ======================================================================== */
 
 export interface ReviewAggregate {
@@ -295,19 +302,60 @@ export interface PlaceholderTestimonial extends TestimonialBase {
   readonly isPlaceholder: true;
 }
 
+/**
+ * A real Google review, fetched at build time by
+ * src/lib/featurable-reviews.ts and baked into static HTML. Nothing in this
+ * repository ever constructs one of these by hand — that is the point of the
+ * union. If it is in the source tree, it is a placeholder; if it came from
+ * Google, it is verified.
+ *
+ * The fields exist to satisfy Google's display requirements: the reviewer's
+ * name as given, the text unedited, and a link back to the Google listing.
+ *
+ * There is deliberately NO reviewer-photo field. Those images are hosted by
+ * Google, so rendering one means either a third-party request from the
+ * visitor's browser — which this site otherwise never makes — or a build-time
+ * download of a URL that rotates and expires and can fail the build. The card
+ * renders an initials circle instead. See the header of
+ * src/lib/featurable-reviews.ts.
+ */
 export interface VerifiedTestimonial extends TestimonialBase {
   readonly isPlaceholder: false;
-  /** Only set once the client confirms permission to quote this reviewer. */
-  readonly permissionGranted: true;
+  /** Where the review came from. Only Google today; typed for the next source. */
+  readonly source: 'google';
+  /** The reviewer's display name, exactly as Google returns it. */
+  readonly authorName: string;
+  /**
+   * The publication date, already formatted for display, e.g. "12 March 2026".
+   * Absolute rather than relative on purpose: this HTML is baked at build time
+   * and "3 months ago" would silently go stale between builds.
+   */
+  readonly publishedLabel?: string;
+  /** RFC 3339 publish time, for the `datetime` attribute on `<time>`. */
+  readonly publishedIso?: string;
+  /** Where to read the review on Google. Falls back to the listing. */
+  readonly reviewUrl: string;
 }
 
 export type Testimonial = PlaceholderTestimonial | VerifiedTestimonial;
 
 export interface Reviews {
   readonly aggregate: ReviewAggregate;
+  /**
+   * The stopgap testimonials, used whenever the build-time review fetch
+   * cannot run or fails. See src/lib/featurable-reviews.ts.
+   */
   readonly testimonials: readonly Testimonial[];
   /** Shown alongside placeholder testimonials so the page is never dishonest. */
   readonly placeholderDisclaimer: string;
+  /**
+   * Shown in place of `placeholderDisclaimer` when real Google reviews were
+   * fetched. Google returns at most five reviews and picks them itself, so
+   * this wording must never imply the page is showing all of them.
+   */
+  readonly verifiedDisclaimer: string;
+  /** Attribution required by Google's display terms. Used as the eyebrow. */
+  readonly verifiedAttribution: string;
 }
 
 /* ===========================================================================
@@ -640,8 +688,17 @@ export const business: Business = {
     },
     placeholderDisclaimer:
       'Read the real reviews on the Google listing — the quotes shown here are examples pending the client’s own selection.',
-    // TODO(client): replace with real review text, and confirm permission to
-    // quote each named reviewer (AGENTS.md section 8). Until then every entry
+    verifiedDisclaimer:
+      'A few of the most recent reviews Google publishes for the workshop, in the reviewers’ own words and unedited. Google shows a handful at a time — the rest are on the listing.',
+    verifiedAttribution: 'Reviews from Google',
+    // The entries below are the FALLBACK, shown only when the build-time
+    // review fetch cannot run (no widget ID, no network, an API error). When it
+    // succeeds, src/lib/featurable-reviews.ts supplies real
+    // `VerifiedTestimonial`s instead and none of this is rendered.
+    //
+    // TODO(client): create a free Featurable account, connect the Google
+    // Business Profile and set FEATURABLE_WIDGET_ID (see .env.example) so the
+    // real reviews are fetched. Until then every entry
     // below is `isPlaceholder: true` and must be rendered as an obvious
     // placeholder — never presented as a genuine customer quote. The
     // attributions are initials plus a place on purpose: no invented words are
