@@ -426,6 +426,24 @@ const FORMATTED_ADDRESS =
   'Unit 1, 75 Tavistock Street, Fenny Stratford, Bletchley, Milton Keynes, MK2 2PG';
 
 /**
+ * The map query: the business name AND the full address.
+ *
+ * Name alone is not enough. Google truncates the long trading name in an embed
+ * query — "J.Michael Bicycle Repair (Bletchley Bicycle Repairs, Servicing &
+ * Sales by J.Michael & Co)" resolves to just "J.Michael Bicycle Repair", which
+ * is a global search that can land anywhere. Address alone drops the pin in
+ * the right place but labels it with a street rather than the business.
+ *
+ * Name plus address survives intact and gives both: the workshop's own name on
+ * the pin, at coordinates that cannot be wrong.
+ *
+ * The name contains "&", which MUST be percent-encoded. Pasted raw into an
+ * iframe src it terminates the query parameter and silently truncates the
+ * search — the bug in most copy-pasted embed snippets.
+ */
+const MAP_QUERY = `J.Michael Bicycle Repair, ${FORMATTED_ADDRESS}`;
+
+/**
  * The three published prices, in ascending order — the order they appear on the
  * client's own price card, and the order they must appear in on the site.
  * Declared once here so the numeral is written exactly once in this repository.
@@ -479,10 +497,10 @@ export const business: Business = {
     countryCode: 'GB',
     formatted: FORMATTED_ADDRESS,
     directionsUrl: `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(
-      FORMATTED_ADDRESS,
+      MAP_QUERY,
     )}`,
     mapEmbedUrl: `https://maps.google.com/maps?q=${encodeURIComponent(
-      FORMATTED_ADDRESS,
+      MAP_QUERY,
     )}&z=15&hl=en&output=embed`,
     areaServed: ['Bletchley', 'Fenny Stratford', 'Milton Keynes'],
   },
