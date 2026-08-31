@@ -72,14 +72,22 @@ export interface HoursRow {
   /** Display string, e.g. "8:30am – 5:30pm" or "Closed". */
   readonly display: string;
   readonly note: string;
+  /**
+   * Status forced for THIS day only. `auto` means derive it from the times.
+   *
+   * Deliberately per-day rather than business-wide: the columns sit on a day
+   * row, so "OPEN on the Sunday row" has to mean "open on Sundays". Read
+   * globally it would apply every day of the week, and the row it was typed
+   * into would mean nothing.
+   */
+  readonly statusOverride: StatusOverride;
+  /** Notice shown on THIS day only. Empty means show nothing. */
+  readonly announcement: string;
 }
 
 export interface HoursResult {
   readonly rows: readonly HoursRow[];
   readonly source: 'sheet' | 'fallback';
-  readonly statusOverride: StatusOverride;
-  /** Free-text notice for the top of the block. Empty means show nothing. */
-  readonly announcement: string;
   /** `DayHours[]` for schema.org, or null while hours are unknown. */
   readonly schedule: readonly DayHours[] | null;
 }
@@ -110,11 +118,11 @@ function parseBoolean(raw: string): boolean {
   return /^(true|yes|y|1)$/i.test(raw.trim());
 }
 
-function parseOverride(raw: string): StatusOverride {
+function parseOverride(raw: string, label: string): StatusOverride {
   const value = raw.trim().toLowerCase();
   if (value === 'open' || value === 'busy' || value === 'closed') return value;
   if (value !== '' && value !== 'auto') {
-    log(`unrecognised status_override "${raw}" — treating it as auto.`);
+    log(`unrecognised status_override "${raw}" on ${label} — treating it as auto.`);
   }
   return 'auto';
 }
@@ -125,30 +133,26 @@ function fallback(reason: string): HoursResult {
   const hours = business.hours;
 
   if (hours.kind === 'scheduled') {
-    return {
-      rows: hours.days.map(toRow),
-      source: 'fallback',
-      statusOverride: 'auto',
-      announcement: '',
-      schedule: hours.days,
-    };
+    return { rows: hours.days.map(toRow), source: 'fallback', schedule: hours.days };
   }
 
   // Hours genuinely unknown: say so rather than showing an empty table.
-  return {
-    rows: [],
-    source: 'fallback',
-    statusOverride: 'auto',
-    announcement: hours.message,
-    schedule: null,
-  };
+  return { rows: [], source: 'fallback', schedule: null };
 }
 
 function toRow(day: DayHours): HoursRow {
   const label = DAY_LABEL[day.day];
 
   if (day.status === 'closed') {
-    return { day: day.day, label, isClosed: true, display: 'Closed', note: '' };
+    return {
+      day: day.day,
+      label,
+      isClosed: true,
+      display: 'Closed',
+      note: '',
+      statusOverride: 'auto',
+      announcement: '',
+    };
   }
 
   const interval = day.intervals[0];
@@ -162,6 +166,8 @@ function toRow(day: DayHours): HoursRow {
       ? `${formatTime(interval.opens)} – ${formatTime(interval.closes)}`
       : 'Closed',
     note: '',
+    statusOverride: 'auto',
+    announcement: '',
   };
 }
 
@@ -176,9 +182,19 @@ function rowFromCsv(row: CsvRow): HoursRow | null {
   const label = DAY_LABEL[day];
   const note = row.note ?? '';
   const closed = parseBoolean(row.is_closed ?? '');
+  const statusOverride = parseOverride(row.status_override ?? '', label);
+  const announcement = (row.custom_announcement ?? '').trim();
 
   if (closed) {
-    return { day, label, isClosed: true, display: 'Closed', note };
+    return {
+      day,
+      label,
+      isClosed: true,
+      display: 'Closed',
+      note,
+      statusOverride,
+      announcement,
+    };
   }
 
   const opens = parseTime(row.open_time ?? '');
@@ -192,7 +208,15 @@ function rowFromCsv(row: CsvRow): HoursRow | null {
     log(
       `${label} is not marked closed but has unusable times ("${row.open_time}"–"${row.close_time}") — showing it as closed.`,
     );
-    return { day, label, isClosed: true, display: 'Closed', note };
+    return {
+      day,
+      label,
+      isClosed: true,
+      display: 'Closed',
+      note,
+      statusOverride,
+      announcement,
+    };
   }
 
   return {
@@ -203,6 +227,8 @@ function rowFromCsv(row: CsvRow): HoursRow | null {
     closes,
     display: `${formatTime(opens)} – ${formatTime(closes)}`,
     note,
+    statusOverride,
+    announcement,
   };
 }
 
@@ -299,24 +325,17 @@ async function load(): Promise<HoursResult> {
           isClosed: true,
           display: 'Closed',
           note: '',
+          statusOverride: 'auto' as const,
+          announcement: '',
         },
     );
 
-    /*
-     * The override and the announcement are business-wide, not per-day, so
-     * they are read from the first row that supplies one. That lets the client
-     * type them in the Monday row without having to repeat them down the sheet.
-     */
-    const overrideCell = csvRows.find((row) => (row.status_override ?? '').trim() !== '');
-    const announcementCell = csvRows.find(
-      (row) => (row.custom_announcement ?? '').trim() !== '',
-    );
-
-    const statusOverride = parseOverride(overrideCell?.status_override ?? '');
-    if (statusOverride !== 'auto') {
-      log(
-        `status_override is "${statusOverride}" — the badge will show that regardless of the timetable until the cell is cleared.`,
-      );
+    for (const row of rows) {
+      if (row.statusOverride !== 'auto') {
+        log(
+          `${row.label} has status_override "${row.statusOverride}" — on ${row.label}s the badge will show that regardless of the times, until the cell is cleared.`,
+        );
+      }
     }
 
     log(
@@ -326,13 +345,7 @@ async function load(): Promise<HoursResult> {
         .join(', ')}.`,
     );
 
-    return {
-      rows,
-      source: 'sheet',
-      statusOverride,
-      announcement: (announcementCell?.custom_announcement ?? '').trim(),
-      schedule: toSchedule(rows),
-    };
+    return { rows, source: 'sheet', schedule: toSchedule(rows) };
   } catch (error) {
     const reason =
       error instanceof Error && error.name === 'AbortError'
